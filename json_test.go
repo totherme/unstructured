@@ -18,7 +18,11 @@ var _ = Describe("Json", func() {
 								"bob",
 								"ezekiel"
 							],
-							"life": 42
+							"life": 42,
+							"things": {
+								"more": "things"
+							},
+							"beauty": true
 						}`
 
 			json, err = nosj.Json(rawjson)
@@ -34,6 +38,19 @@ var _ = Describe("Json", func() {
 			Expect(json.HasKey("othernames")).To(BeTrue(), "the othernames key should exist")
 			Expect(json.HasKey("life")).To(BeTrue(), "the life key should exist")
 			Expect(json.HasKey("wat?")).To(BeFalse(), "the wat key should not exist")
+		})
+
+		It("should give accurate type reports about the keys", func() {
+			Expect(json.IsString("name")).To(BeTrue(), "name is a string")
+			Expect(json.IsString("othernames")).To(BeFalse(), "othernames is not a string")
+			Expect(json.IsList("othernames")).To(BeTrue(), "othernames is a list")
+			Expect(json.IsList("life")).To(BeFalse(), "life is not a list")
+			Expect(json.IsNum("life")).To(BeTrue(), "life is a number")
+			Expect(json.IsNum("name")).To(BeFalse(), "name is not a number")
+			Expect(json.IsOb("things")).To(BeTrue(), "things is an object")
+			Expect(json.IsOb("beauty")).To(BeFalse(), "beauty is not an object")
+			Expect(json.IsBool("beauty")).To(BeTrue(), "beauty is a bool")
+			Expect(json.IsBool("things")).To(BeFalse(), "things is not a bool")
 		})
 	})
 
