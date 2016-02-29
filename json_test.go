@@ -33,7 +33,7 @@ var _ = Describe("Json", func() {
 			Expect(err).NotTo(HaveOccurred())
 		})
 
-		It("should tell me that precisely the keys name, othernames and life exist", func() {
+		It("should tell me that extant keys exist, and others do not", func() {
 			Expect(json.HasKey("name")).To(BeTrue(), "the name key should exist")
 			Expect(json.HasKey("othernames")).To(BeTrue(), "the othernames key should exist")
 			Expect(json.HasKey("life")).To(BeTrue(), "the life key should exist")
@@ -51,6 +51,15 @@ var _ = Describe("Json", func() {
 			Expect(json.IsOb("beauty")).To(BeFalse(), "beauty is not an object")
 			Expect(json.IsBool("beauty")).To(BeTrue(), "beauty is a bool")
 			Expect(json.IsBool("things")).To(BeFalse(), "things is not a bool")
+		})
+
+		It("should be able to get a string", func() {
+			Expect(json.GetString("name")).To(Equal("fred"))
+		})
+
+		It("should be able to get a list", func() {
+			list := json.GetList("othernames")
+			Expect(len(list)).To(Equal(3))
 		})
 	})
 
