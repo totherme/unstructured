@@ -48,3 +48,11 @@ It("contains deep things", func() {
   Expect(json.GetField("things").GetField("more").StringValue()).To(Equal("things"))
 })
 ```
+
+If you get bored typing `GetField`, then try `F`
+
+```go
+It("contains deep things", func() {
+  Expect(json.F("things").F("more").StringValue()).To(Equal("things"))
+})
+```

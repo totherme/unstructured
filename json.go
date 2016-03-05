@@ -38,6 +38,10 @@ func (j JSON) GetField(key string) JSON {
 	return JSON{st: val}
 }
 
+func (j JSON) F(key string) JSON {
+	return j.GetField(key)
+}
+
 func (j JSON) IsString() bool {
 	return reflect.TypeOf(j.st) == reflect.TypeOf("")
 }

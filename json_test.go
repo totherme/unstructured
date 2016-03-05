@@ -6,6 +6,7 @@ import (
 	"github.com/totherme/nosj"
 
 	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
 )
 
@@ -67,9 +68,20 @@ var _ = Describe("Json", func() {
 			Expect(json.GetField("things").GetField("more").StringValue()).To(Equal("things"))
 		})
 
+		DescribeTable("F does the same thing as GetField", func(key string) {
+			Expect(json.F(key)).To(Equal(json.GetField(key)))
+		},
+			Entry("existing object key", "things"),
+			Entry("existing string key", "name"),
+			Entry("existing list key", "othernames"),
+			Entry("existing number key", "life"),
+			Entry("existing boolean key", "beauty"),
+		)
+
 		Context("when I try to get a key that doesn't exist", func() {
 			It("panics", func() {
 				Expect(func() { json.GetField("oh noe!") }).To(Panic())
+				Expect(func() { json.F("oh noe!") }).To(Panic())
 			})
 		})
 
