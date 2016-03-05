@@ -6,7 +6,7 @@ Import [nosj](http://github.com/totherme/nosj),
 [ginkgo](http://github.com/onsi/ginkgo) and
 [gomega](http://github.com/onsi/gomega):
 
-```golang
+```go
 import (
 	"github.com/totherme/nosj"
 
@@ -17,7 +17,7 @@ import (
 
 Get yourself some JSON:
 
-```golang
+```go
 rawjson :=
   `{"name": "fred",
         "othernames": [
@@ -38,7 +38,7 @@ Expect(err).NotTo(HaveOccurred())
 
 Test that it looks the way you expect:
 
-```golang
+```go
 It("has a 'life' field with a number in", func() {
   Expect(json.HasKey("life")).To(BeTrue())
   Expect(json.GetField("life").IsNum()).To(BeTrue())
