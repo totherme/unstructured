@@ -9,7 +9,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("BeAnObject", func() {
+var _ = Describe("BeAString", func() {
 	var rawjson string
 
 	BeforeEach(func() {
@@ -29,12 +29,12 @@ var _ = Describe("BeAnObject", func() {
 	})
 
 	Context("when we're given a JSON struct", func() {
-		DescribeTable("BeAnObject matches iff IsOb returns true", func(key string) {
+		DescribeTable("BeAString matches iff IsString returns true", func(key string) {
 			testjson, err := nosj.ParseJSON(rawjson)
 			Expect(err).NotTo(HaveOccurred())
 
 			field := testjson.F(key)
-			Expect(matchers.BeAnObject().Match(field)).To(Equal(field.IsOb()))
+			Expect(matchers.BeAString().Match(field)).To(Equal(field.IsString()))
 		},
 
 			Entry("a string", "name"),
@@ -48,7 +48,7 @@ var _ = Describe("BeAnObject", func() {
 
 	Context("when we're not given a json struct", func() {
 		It("fails", func() {
-			_, err := matchers.BeAnObject().Match(4)
+			_, err := matchers.BeAString().Match(4)
 			Expect(err).To(MatchError(ContainSubstring("not a JSON")))
 		})
 	})
@@ -61,9 +61,9 @@ var _ = Describe("BeAnObject", func() {
 
 				field := testjson.F(key)
 
-				Expect(matchers.BeAnObject().FailureMessage(field)).To(ContainSubstring(typ))
+				Expect(matchers.BeAString().FailureMessage(field)).To(ContainSubstring(typ))
 			},
-				Entry("a string", "name", "string"),
+				Entry("an object", "things", "object"),
 				Entry("a number", "life", "number"),
 				Entry("a list", "othernames", "list"),
 				Entry("a boolean", "beauty", "bool"),
@@ -73,16 +73,16 @@ var _ = Describe("BeAnObject", func() {
 
 		Context("when we get some other type of struct", func() {
 			It("mentions the type of the struct we /did/ get", func() {
-				Expect(matchers.BeAnObject().FailureMessage(12)).To(ContainSubstring("int"))
+				Expect(matchers.BeAString().FailureMessage(12)).To(ContainSubstring("int"))
 			})
 		})
 	})
 
 	Describe("NegatedFailureMessage", func() {
-		It("tells us we got a JSON object", func() {
+		It("tells us we got a JSON string", func() {
 			json, err := nosj.ParseJSON(`{}`)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(matchers.BeAnObject().NegatedFailureMessage(json)).To(ContainSubstring("got a JSON object"))
+			Expect(matchers.BeAString().NegatedFailureMessage(json)).To(ContainSubstring("got a JSON string"))
 		})
 	})
 })
