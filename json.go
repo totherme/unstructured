@@ -10,7 +10,7 @@ type JSON struct {
 	st interface{}
 }
 
-func Json(rawjson string) (JSON, error) {
+func ParseJSON(rawjson string) (JSON, error) {
 	j := JSON{}
 	err := json.Unmarshal([]byte(rawjson), &j.st)
 	if err != nil {

@@ -10,7 +10,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Json", func() {
+var _ = Describe("JSON", func() {
 	Context("when my JSON represents an object", func() {
 		var err error
 		var json nosj.JSON
@@ -28,7 +28,7 @@ var _ = Describe("Json", func() {
 							"beauty": true
 						}`
 
-			json, err = nosj.Json(rawjson)
+			json, err = nosj.ParseJSON(rawjson)
 
 		})
 
@@ -38,7 +38,7 @@ var _ = Describe("Json", func() {
 
 		It("tells me that my json represents an object", func() {
 			Expect(json.IsOb()).To(BeTrue(), "this json represents an object")
-			simpleObJson, err := nosj.Json(`{"string":1 , "otherstring":2}`)
+			simpleObJson, err := nosj.ParseJSON(`{"string":1 , "otherstring":2}`)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(simpleObJson.IsOb()).To(BeTrue(), "this json represents an object")
 		})
@@ -99,7 +99,7 @@ var _ = Describe("Json", func() {
 		var json nosj.JSON
 		var err error
 		BeforeEach(func() {
-			json, err = nosj.Json(`"this is a string"`)
+			json, err = nosj.ParseJSON(`"this is a string"`)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -136,7 +136,7 @@ var _ = Describe("Json", func() {
 		var err error
 
 		BeforeEach(func() {
-			json, err = nosj.Json(`3.141`)
+			json, err = nosj.ParseJSON(`3.141`)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -173,7 +173,7 @@ var _ = Describe("Json", func() {
 		var err error
 
 		BeforeEach(func() {
-			json, err = nosj.Json(`true`)
+			json, err = nosj.ParseJSON(`true`)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -210,7 +210,7 @@ var _ = Describe("Json", func() {
 		var err error
 
 		BeforeEach(func() {
-			json, err = nosj.Json(`[true, 32, {"this":"that"}]`)
+			json, err = nosj.ParseJSON(`[true, 32, {"this":"that"}]`)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -250,7 +250,7 @@ var _ = Describe("Json", func() {
 		var err error
 
 		BeforeEach(func() {
-			json, err = nosj.Json(`null`)
+			json, err = nosj.ParseJSON(`null`)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -281,7 +281,7 @@ var _ = Describe("Json", func() {
 
 	Context("when I look at some invalid JSON", func() {
 		It("returns a helpful error", func() {
-			_, err := nosj.Json("this isn't even slightly json")
+			_, err := nosj.ParseJSON("this isn't even slightly json")
 			Expect(err).To(MatchError(ContainSubstring("parse error")))
 		})
 	})

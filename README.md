@@ -32,7 +32,7 @@ rawjson :=
         "beauty": true
       }`
 
-json, err = nosj.Json(rawjson)
+json, err = nosj.ParseJSON(rawjson)
 Expect(err).NotTo(HaveOccurred())
 ```
 
