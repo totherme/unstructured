@@ -23,6 +23,30 @@ func BeAString() JSONTypeMatcher {
 	}
 }
 
+func BeAList() JSONTypeMatcher {
+	return JSONTypeMatcher{
+		typ: nosj.JSONList,
+	}
+}
+
+func BeANum() JSONTypeMatcher {
+	return JSONTypeMatcher{
+		typ: nosj.JSONNum,
+	}
+}
+
+func BeABool() JSONTypeMatcher {
+	return JSONTypeMatcher{
+		typ: nosj.JSONBool,
+	}
+}
+
+func BeANull() JSONTypeMatcher {
+	return JSONTypeMatcher{
+		typ: nosj.JSONNull,
+	}
+}
+
 func (m JSONTypeMatcher) Match(actual interface{}) (success bool, err error) {
 	if reflect.TypeOf(actual) != reflect.TypeOf(nosj.JSON{}) {
 		return false, fmt.Errorf("actual is not a JSON -- actually of type %s", reflect.TypeOf(actual))

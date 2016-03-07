@@ -9,8 +9,14 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("BeAnObject", func() {
+type testData struct {
+	Matcher matchers.JSONTypeMatcher
+	Typ     string
+}
+
+var _ = Describe("The JSON type matchers", func() {
 	var rawjson string
+	var matcherSet []testData
 
 	BeforeEach(func() {
 		rawjson = `{"name": "fred",
@@ -26,15 +32,44 @@ var _ = Describe("BeAnObject", func() {
 							"beauty": true,
 							"not": null
 						}`
+
+		matcherSet = []testData{
+			{
+				Matcher: matchers.BeAnObject(),
+				Typ:     nosj.JSONOb,
+			},
+			{
+				Matcher: matchers.BeAString(),
+				Typ:     nosj.JSONString,
+			},
+			{
+				Matcher: matchers.BeAList(),
+				Typ:     nosj.JSONList,
+			},
+			{
+				Matcher: matchers.BeANum(),
+				Typ:     nosj.JSONNum,
+			},
+			{
+				Matcher: matchers.BeABool(),
+				Typ:     nosj.JSONBool,
+			},
+			{
+				Matcher: matchers.BeANull(),
+				Typ:     nosj.JSONNull,
+			},
+		}
 	})
 
 	Context("when we're given a JSON struct", func() {
-		DescribeTable("BeAnObject matches iff IsOb returns true", func(key string) {
+		DescribeTable("each matcher matches iff IsOfType returns true for its type", func(key string) {
 			testjson, err := nosj.ParseJSON(rawjson)
 			Expect(err).NotTo(HaveOccurred())
 
 			field := testjson.F(key)
-			Expect(matchers.BeAnObject().Match(field)).To(Equal(field.IsOb()))
+			for _, td := range matcherSet {
+				Expect(td.Matcher.Match(field)).To(Equal(field.IsOfType(td.Typ)))
+			}
 		},
 
 			Entry("a string", "name"),
@@ -48,8 +83,10 @@ var _ = Describe("BeAnObject", func() {
 
 	Context("when we're not given a json struct", func() {
 		It("fails", func() {
-			_, err := matchers.BeAnObject().Match(4)
-			Expect(err).To(MatchError(ContainSubstring("not a JSON")))
+			for _, td := range matcherSet {
+				_, err := td.Matcher.Match(4)
+				Expect(err).To(MatchError(ContainSubstring("not a JSON")))
+			}
 		})
 	})
 
@@ -61,8 +98,12 @@ var _ = Describe("BeAnObject", func() {
 
 				field := testjson.F(key)
 
-				Expect(matchers.BeAnObject().FailureMessage(field)).To(ContainSubstring(typ))
+				for _, td := range matcherSet {
+					Expect(td.Matcher.FailureMessage(field)).To(ContainSubstring("expected a JSON %s", td.Typ))
+					Expect(td.Matcher.FailureMessage(field)).To(ContainSubstring("got a JSON %s", typ))
+				}
 			},
+				Entry("an object", "things", "object"),
 				Entry("a string", "name", "string"),
 				Entry("a number", "life", "number"),
 				Entry("a list", "othernames", "list"),
@@ -73,7 +114,9 @@ var _ = Describe("BeAnObject", func() {
 
 		Context("when we get some other type of struct", func() {
 			It("mentions the type of the struct we /did/ get", func() {
-				Expect(matchers.BeAnObject().FailureMessage(12)).To(ContainSubstring("int"))
+				for _, td := range matcherSet {
+					Expect(td.Matcher.FailureMessage(12)).To(ContainSubstring("int"))
+				}
 			})
 		})
 	})
@@ -82,7 +125,9 @@ var _ = Describe("BeAnObject", func() {
 		It("tells us we got a JSON object", func() {
 			json, err := nosj.ParseJSON(`{}`)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(matchers.BeAnObject().NegatedFailureMessage(json)).To(ContainSubstring("got a JSON object"))
+			for _, td := range matcherSet {
+				Expect(td.Matcher.NegatedFailureMessage(json)).To(ContainSubstring("got a JSON %s", td.Typ))
+			}
 		})
 	})
 })
