@@ -7,28 +7,19 @@ import (
 	"github.com/totherme/nosj"
 )
 
-const (
-	JSONString = "string"
-	JSONNum    = "number"
-	JSONOb     = "object"
-	JSONList   = "list"
-	JSONNull   = "null"
-	JSONBool   = "bool"
-)
-
 type JSONTypeMatcher struct {
 	typ string
 }
 
 func BeAnObject() JSONTypeMatcher {
 	return JSONTypeMatcher{
-		typ: JSONOb,
+		typ: nosj.JSONOb,
 	}
 }
 
 func BeAString() JSONTypeMatcher {
 	return JSONTypeMatcher{
-		typ: JSONString,
+		typ: nosj.JSONString,
 	}
 }
 
@@ -39,17 +30,17 @@ func (m JSONTypeMatcher) Match(actual interface{}) (success bool, err error) {
 	json := actual.(nosj.JSON)
 
 	switch m.typ {
-	case JSONString:
+	case nosj.JSONString:
 		return json.IsString(), nil
-	case JSONNum:
+	case nosj.JSONNum:
 		return json.IsNum(), nil
-	case JSONOb:
+	case nosj.JSONOb:
 		return json.IsOb(), nil
-	case JSONList:
+	case nosj.JSONList:
 		return json.IsList(), nil
-	case JSONNull:
+	case nosj.JSONNull:
 		return json.IsNull(), nil
-	case JSONBool:
+	case nosj.JSONBool:
 		return json.IsBool(), nil
 	}
 	return false, fmt.Errorf("this is some kind of crazy JSON")

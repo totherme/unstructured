@@ -6,6 +6,15 @@ import (
 	"reflect"
 )
 
+const (
+	JSONString = "string"
+	JSONNum    = "number"
+	JSONOb     = "object"
+	JSONList   = "list"
+	JSONNull   = "null"
+	JSONBool   = "bool"
+)
+
 type JSON struct {
 	st interface{}
 }
@@ -83,4 +92,23 @@ func (j JSON) ListValue() (list []JSON) {
 
 func (j JSON) IsNull() bool {
 	return j.st == nil
+}
+
+func (j JSON) IsOfType(typ string) bool {
+	switch typ {
+	case JSONOb:
+		return j.IsOb()
+	case JSONString:
+		return j.IsString()
+	case JSONList:
+		return j.IsList()
+	case JSONNum:
+		return j.IsNum()
+	case JSONBool:
+		return j.IsBool()
+	case JSONNull:
+		return j.IsNull()
+	default:
+		panic("that's not a JSON type!")
+	}
 }

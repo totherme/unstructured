@@ -11,11 +11,9 @@ import (
 )
 
 var _ = Describe("JSON", func() {
-	Context("when my JSON represents an object", func() {
-		var err error
-		var json nosj.JSON
-		BeforeEach(func() {
-			rawjson := `{"name": "fred",
+	var rawjson string
+	BeforeEach(func() {
+		rawjson = `{"name": "fred",
 							"othernames": [
 								"alice",
 								"bob",
@@ -25,11 +23,15 @@ var _ = Describe("JSON", func() {
 							"things": {
 								"more": "things"
 							},
-							"beauty": true
+							"beauty": true,
+							"not": null
 						}`
-
+	})
+	Context("when my JSON represents an object", func() {
+		var err error
+		var json nosj.JSON
+		BeforeEach(func() {
 			json, err = nosj.ParseJSON(rawjson)
-
 		})
 
 		It("parses the json successfully", func() {
@@ -76,6 +78,7 @@ var _ = Describe("JSON", func() {
 			Entry("existing list key", "othernames"),
 			Entry("existing number key", "life"),
 			Entry("existing boolean key", "beauty"),
+			Entry("existing null key", "not"),
 		)
 
 		Context("when I try to get a key that doesn't exist", func() {
@@ -283,6 +286,37 @@ var _ = Describe("JSON", func() {
 		It("returns a helpful error", func() {
 			_, err := nosj.ParseJSON("this isn't even slightly json")
 			Expect(err).To(MatchError(ContainSubstring("parse error")))
+		})
+	})
+
+	Describe("the IsOfType convenience method", func() {
+		var json nosj.JSON
+		BeforeEach(func() {
+			var err error
+			json, err = nosj.ParseJSON(rawjson)
+			Expect(err).NotTo(HaveOccurred())
+		})
+		DescribeTable("IsOfType does the same as the individual type methods", func(key string) {
+			field := json.F(key)
+			Expect(field.IsOfType(nosj.JSONOb)).To(Equal(field.IsOb()))
+			Expect(field.IsOfType(nosj.JSONString)).To(Equal(field.IsString()))
+			Expect(field.IsOfType(nosj.JSONList)).To(Equal(field.IsList()))
+			Expect(field.IsOfType(nosj.JSONNum)).To(Equal(field.IsNum()))
+			Expect(field.IsOfType(nosj.JSONBool)).To(Equal(field.IsBool()))
+			Expect(field.IsOfType(nosj.JSONNull)).To(Equal(field.IsNull()))
+		},
+			Entry("an object key", "things"),
+			Entry("an string key", "name"),
+			Entry("an list key", "othernames"),
+			Entry("an number key", "life"),
+			Entry("an boolean key", "beauty"),
+			Entry("a null key", "not"),
+		)
+
+		Context("when we give a string that isn't a JSON type", func() {
+			It("panics", func() {
+				Expect(func() { json.IsOfType("badgers") }).To(Panic())
+			})
 		})
 	})
 })
