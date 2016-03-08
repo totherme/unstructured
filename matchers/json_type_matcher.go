@@ -48,13 +48,12 @@ func BeANull() JSONTypeMatcher {
 }
 
 func (m JSONTypeMatcher) Match(actual interface{}) (success bool, err error) {
-	if reflect.TypeOf(actual) != reflect.TypeOf(nosj.JSON{}) {
+	switch json := actual.(type) {
+	default:
 		return false, fmt.Errorf("actual is not a JSON -- actually of type %s", reflect.TypeOf(actual))
+	case nosj.JSON:
+		return json.IsOfType(m.typ), nil
 	}
-
-	json := actual.(nosj.JSON)
-
-	return json.IsOfType(m.typ), nil
 }
 
 func (m JSONTypeMatcher) FailureMessage(actual interface{}) (message string) {

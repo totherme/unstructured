@@ -7,10 +7,11 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega/types"
 )
 
 type testData struct {
-	Matcher matchers.JSONTypeMatcher
+	Matcher types.GomegaMatcher
 	Typ     string
 }
 
