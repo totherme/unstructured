@@ -16,12 +16,12 @@ const (
 )
 
 type JSON struct {
-	st interface{}
+	nosj interface{}
 }
 
 func ParseJSON(rawjson string) (JSON, error) {
 	j := JSON{}
-	err := json.Unmarshal([]byte(rawjson), &j.st)
+	err := json.Unmarshal([]byte(rawjson), &j.nosj)
 	if err != nil {
 		return JSON{}, fmt.Errorf("parse error: %s", err.Error())
 	}
@@ -29,22 +29,22 @@ func ParseJSON(rawjson string) (JSON, error) {
 }
 
 func (j JSON) IsOb() bool {
-	return reflect.TypeOf(j.st) == reflect.TypeOf(map[string]interface{}{})
+	return reflect.TypeOf(j.nosj) == reflect.TypeOf(map[string]interface{}{})
 }
 
 func (j JSON) HasKey(key string) bool {
-	jmap := j.st.(map[string]interface{})
+	jmap := j.nosj.(map[string]interface{})
 	_, ok := jmap[key]
 	return ok
 }
 
 func (j JSON) GetField(key string) JSON {
-	jmap := j.st.(map[string]interface{})
+	jmap := j.nosj.(map[string]interface{})
 	val, ok := jmap[key]
 	if !ok {
 		panic("getting a non-existing field from a JSON")
 	}
-	return JSON{st: val}
+	return JSON{nosj: val}
 }
 
 func (j JSON) F(key string) JSON {
@@ -52,46 +52,46 @@ func (j JSON) F(key string) JSON {
 }
 
 func (j JSON) IsString() bool {
-	return reflect.TypeOf(j.st) == reflect.TypeOf("")
+	return reflect.TypeOf(j.nosj) == reflect.TypeOf("")
 }
 
 func (j JSON) StringValue() string {
-	return j.st.(string)
+	return j.nosj.(string)
 }
 
 func (j JSON) IsNum() bool {
-	return reflect.TypeOf(j.st) == reflect.TypeOf(64.4)
+	return reflect.TypeOf(j.nosj) == reflect.TypeOf(64.4)
 }
 
 func (j JSON) NumValue() float64 {
-	return j.st.(float64)
+	return j.nosj.(float64)
 }
 
 func (j JSON) IsBool() bool {
-	return reflect.TypeOf(j.st) == reflect.TypeOf(true)
+	return reflect.TypeOf(j.nosj) == reflect.TypeOf(true)
 }
 
 func (j JSON) BoolValue() bool {
-	return j.st.(bool)
+	return j.nosj.(bool)
 }
 
 func (j JSON) IsList() bool {
-	if j.st == nil {
+	if j.nosj == nil {
 		return false
 	}
-	return reflect.TypeOf(j.st).Kind() == reflect.TypeOf([]interface{}{}).Kind()
+	return reflect.TypeOf(j.nosj).Kind() == reflect.TypeOf([]interface{}{}).Kind()
 }
 
 func (j JSON) ListValue() (list []JSON) {
 	list = []JSON{}
-	for _, val := range j.st.([]interface{}) {
-		list = append(list, JSON{st: val})
+	for _, val := range j.nosj.([]interface{}) {
+		list = append(list, JSON{nosj: val})
 	}
 	return
 }
 
 func (j JSON) IsNull() bool {
-	return j.st == nil
+	return j.nosj == nil
 }
 
 func (j JSON) IsOfType(typ string) bool {
