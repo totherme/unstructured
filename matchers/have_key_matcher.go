@@ -25,26 +25,23 @@ func (m HaveJSONKeyMatcher) Match(actual interface{}) (bool, error) {
 
 func (m HaveJSONKeyMatcher) FailureMessage(actual interface{}) (message string) {
 	actualString := fmt.Sprintf("%+v", actual)
-	var displayString string
-	if len(actualString) > 50 {
-		displayString = fmt.Sprintf("%s...", actualString[0:50])
-	} else {
-		displayString = actualString
-	}
 	return fmt.Sprintf("expected '%s' to be a nosj.JSON object with key '%s'",
-		displayString,
+		truncateString(actualString),
 		m.key)
 }
 
 func (m HaveJSONKeyMatcher) NegatedFailureMessage(actual interface{}) (message string) {
 	actualString := fmt.Sprintf("%+v", actual)
-	var displayString string
-	if len(actualString) > 50 {
-		displayString = fmt.Sprintf("%s...", actualString[0:50])
-	} else {
-		displayString = actualString
-	}
 	return fmt.Sprintf("expected '%s' not to contain the key '%s'",
-		displayString,
+		truncateString(actualString),
 		m.key)
+}
+
+func truncateString(s string) (t string) {
+	if len(s) > 50 {
+		t = fmt.Sprintf("%s...", s[0:50])
+	} else {
+		t = s
+	}
+	return
 }

@@ -65,17 +65,17 @@ var _ = Describe("HaveJSONKeyMatcher", func() {
 				To(ContainSubstring("expected '42' to be a nosj.JSON object with key 'my-key'"))
 		})
 
-		Context("when the input is large", func() {
-			It("truncates the string representation", func() {
-				Expect(matchers.HaveJSONKey("absent-key").FailureMessage(json)).
-					To(ContainSubstring("{nosj:map"))
+		Context("when the input has a long string representation", func() {
+			It("truncates that representation", func() {
+				Expect(len(matchers.HaveJSONKey("absent-key").FailureMessage(json))).To(BeNumerically("<", 115))
 				Expect(matchers.HaveJSONKey("absent-key").FailureMessage(json)).
 					To(ContainSubstring("..."))
-				Expect(len(matchers.HaveJSONKey("absent-key").FailureMessage(json))).To(BeNumerically("<", 115))
+				Expect(matchers.HaveJSONKey("absent-key").FailureMessage(json)).
+					To(ContainSubstring("{nosj:map"))
 			})
 		})
 
-		Context("when the input is exactly as large as we're willing to print", func() {
+		Context("when the input's string representation is exactly as large as we're willing to print", func() {
 			It("prints it all, without elipses", func() {
 				stringOfLength50 := strings.Repeat("a", 50)
 				failureMessage := matchers.HaveJSONKey("absent-key").FailureMessage(stringOfLength50)
@@ -95,8 +95,7 @@ var _ = Describe("HaveJSONKeyMatcher", func() {
 			var err error
 			shortJson, err = nosj.ParseJSON(`{"key":"val"}`)
 			Expect(err).NotTo(HaveOccurred())
-			stringOfLen34 := strings.Repeat("a", 34)
-			jsonOfLength50, err = nosj.ParseJSON(fmt.Sprintf(`{"key":"%s"}`, stringOfLen34))
+			jsonOfLength50, err = nosj.ParseJSON(fmt.Sprintf(`{"key":"%s"}`, strings.Repeat("a", 34)))
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -105,13 +104,13 @@ var _ = Describe("HaveJSONKeyMatcher", func() {
 				To(ContainSubstring("expected '{nosj:map[key:val]}' not to contain the key 'key'"))
 		})
 
-		Context("when the input is large", func() {
-			It("truncates the string representation", func() {
-				Expect(matchers.HaveJSONKey("beauty").NegatedFailureMessage(json)).
-					To(ContainSubstring("{nosj:map"))
+		Context("when the input has a long string representation", func() {
+			It("truncates that representation", func() {
+				Expect(len(matchers.HaveJSONKey("beauty").NegatedFailureMessage(json))).To(BeNumerically("<", 100))
 				Expect(matchers.HaveJSONKey("beauty").NegatedFailureMessage(json)).
 					To(ContainSubstring("..."))
-				Expect(len(matchers.HaveJSONKey("beauty").NegatedFailureMessage(json))).To(BeNumerically("<", 100))
+				Expect(matchers.HaveJSONKey("beauty").NegatedFailureMessage(json)).
+					To(ContainSubstring("{nosj:map"))
 			})
 		})
 
