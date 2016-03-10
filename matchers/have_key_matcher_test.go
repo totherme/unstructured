@@ -68,7 +68,10 @@ var _ = Describe("HaveJSONKeyMatcher", func() {
 		Context("when the input is large", func() {
 			It("truncates the string representation", func() {
 				Expect(matchers.HaveJSONKey("absent-key").FailureMessage(json)).
-					To(ContainSubstring("'{nosj:map[beauty:true life:42 name:fred othernames...'"))
+					To(ContainSubstring("{nosj:map"))
+				Expect(matchers.HaveJSONKey("absent-key").FailureMessage(json)).
+					To(ContainSubstring("..."))
+				Expect(len(matchers.HaveJSONKey("absent-key").FailureMessage(json))).To(BeNumerically("<", 115))
 			})
 		})
 
@@ -105,7 +108,10 @@ var _ = Describe("HaveJSONKeyMatcher", func() {
 		Context("when the input is large", func() {
 			It("truncates the string representation", func() {
 				Expect(matchers.HaveJSONKey("beauty").NegatedFailureMessage(json)).
-					To(ContainSubstring("'{nosj:map[beauty:true life:42 name:fred othernames...'"))
+					To(ContainSubstring("{nosj:map"))
+				Expect(matchers.HaveJSONKey("beauty").NegatedFailureMessage(json)).
+					To(ContainSubstring("..."))
+				Expect(len(matchers.HaveJSONKey("beauty").NegatedFailureMessage(json))).To(BeNumerically("<", 100))
 			})
 		})
 
