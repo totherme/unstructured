@@ -60,6 +60,16 @@ var _ = Describe("JSON", func() {
 			Expect(json.HasKey("wat?")).To(BeFalse(), "the wat key should not exist")
 		})
 
+		It("tells me that extant pointers exist, and others do not", func() {
+			Expect(json.HasPointer("/name")).To(BeTrue(), "the pointer should exist")
+			Expect(json.HasPointer("/life")).To(BeTrue(), "the pointer should exist")
+			Expect(json.HasPointer("/wat?")).To(BeFalse(), "the pointer should not exist")
+			Expect(json.HasPointer("/things/more")).To(BeTrue(), "the pointer should exist")
+			Expect(json.HasPointer("/not/there")).To(BeFalse(), "the pointer should not exist")
+			Expect(json.HasPointer("invalid/pointer")).To(BeFalse(), "the pointer should not exist")
+
+		})
+
 		It("can get an extant key", func() {
 			newJson := json.GetField("things")
 			Expect(newJson.IsOb()).To(BeTrue(), "the inner object is also an object")
@@ -70,8 +80,15 @@ var _ = Describe("JSON", func() {
 			Expect(json.GetField("things").GetField("more").StringValue()).To(Equal("things"))
 		})
 
-		DescribeTable("F does the same thing as GetField", func(key string) {
+		It("can get by pointer", func() {
+			got, err := json.GetByPointer("/things/more")
+			Expect(err).NotTo(HaveOccurred())
+			Expect(got.StringValue()).To(Equal("things"))
+		})
+
+		DescribeTable("F and GetByPointer both mirror GetField for single-level paths", func(key string) {
 			Expect(json.F(key)).To(Equal(json.GetField(key)))
+			Expect(json.GetByPointer("/" + key)).To(Equal(json.GetField(key)))
 		},
 			Entry("existing object key", "things"),
 			Entry("existing string key", "name"),
@@ -96,6 +113,22 @@ var _ = Describe("JSON", func() {
 				Expect(func() { json.ListValue() }).To(Panic())
 			})
 		})
+
+		Describe("error handling of GetByPointer", func() {
+			Context("when we pass a pointer that is invalid", func() {
+				It("returns a helpful error message", func() {
+					_, err = json.GetByPointer("not/starting/with/slash")
+					Expect(err).To(MatchError(ContainSubstring("JSON pointer must be empty or start with a \"/\"")))
+				})
+			})
+			Context("when we pass a pointer to a non-existing key", func() {
+				It("returns a helpful error message", func() {
+					_, err = json.GetByPointer("/not/there")
+					Expect(err).To(MatchError(ContainSubstring("Invalid token reference")))
+				})
+			})
+		})
+
 	})
 
 	Context("when my json represents a string", func() {

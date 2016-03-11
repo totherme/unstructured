@@ -3,6 +3,7 @@ package nosj
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/xeipuuv/gojsonpointer"
 	"reflect"
 )
 
@@ -38,6 +39,15 @@ func (j JSON) HasKey(key string) bool {
 	return ok
 }
 
+func (j JSON) HasPointer(p string) bool {
+	pointer, err := gojsonpointer.NewJsonPointer(p)
+	if err != nil {
+		return false
+	}
+	_, _, err = pointer.Get(j.nosj)
+	return err == nil
+}
+
 func (j JSON) GetField(key string) JSON {
 	jmap := j.nosj.(map[string]interface{})
 	val, ok := jmap[key]
@@ -49,6 +59,17 @@ func (j JSON) GetField(key string) JSON {
 
 func (j JSON) F(key string) JSON {
 	return j.GetField(key)
+}
+
+func (j JSON) GetByPointer(p string) (nosj JSON, err error) {
+
+	pointer, err := gojsonpointer.NewJsonPointer(p)
+	if err != nil {
+		return
+	}
+	json, _, err := pointer.Get(j.nosj)
+	nosj = JSON{nosj: json}
+	return
 }
 
 func (j JSON) IsString() bool {
