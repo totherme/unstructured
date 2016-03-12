@@ -20,17 +20,18 @@ Get yourself some JSON:
 ```go
 rawjson :=
   `{"name": "fred",
-        "othernames": [
-          "alice",
-          "bob",
-          "ezekiel"
-        ],
-        "life": 42,
-        "things": {
-          "more": "things"
-        },
-        "beauty": true
-      }`
+    "othernames": [
+        "alice",
+        "bob",
+        "ezekiel"
+    ],
+    "life": 42,
+    "things": {
+        "more": "things"
+    },
+    "beauty": true,
+    "not": null
+}`
 
 json, err = nosj.ParseJSON(rawjson)
 Expect(err).NotTo(HaveOccurred())
@@ -56,3 +57,21 @@ It("contains deep things", func() {
   Expect(json.F("things").F("more").StringValue()).To(Equal("things"))
 })
 ```
+
+A disadvantage of using `GetField` is that it panics rather than raising an 
+error if the field does not exist. This makes chaining possible, but can make 
+debugging difficult. 
+
+You can avoid this problem with json pointers. Json pointers provide an
+ alternative way to access information deep within a json structure:
+
+```go
+It("contains deep things", func() {
+  Expect(json.HasPointer("/things/more")).To(BeTrue(), "the pointer should exist")
+    
+  got, err := json.GetByPointer("/things/more")
+  Expect(err).NotTo(HaveOccurred())
+  Expect(got.StringValue()).To(Equal("things"))
+})
+```
+`GetByPointer` returns a helpful error if the pointer does not exist in the json. 
