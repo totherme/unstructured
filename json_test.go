@@ -66,8 +66,13 @@ var _ = Describe("JSON", func() {
 			Expect(json.HasPointer("/wat?")).To(BeFalse(), "the pointer should not exist")
 			Expect(json.HasPointer("/things/more")).To(BeTrue(), "the pointer should exist")
 			Expect(json.HasPointer("/not/there")).To(BeFalse(), "the pointer should not exist")
-			Expect(json.HasPointer("invalid/pointer")).To(BeFalse(), "the pointer should not exist")
+		})
 
+		Context("when we pass an invalid pointer", func() {
+			It("returns a helpful error message", func() {
+				_, err = json.HasPointer("invalid/pointer")
+				Expect(err).To(MatchError(ContainSubstring("JSON pointer must be empty or start with a \"/\"")))
+			})
 		})
 
 		It("can get an extant key", func() {

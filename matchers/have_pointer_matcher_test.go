@@ -1,18 +1,18 @@
 package matchers_test
 
 import (
-	"fmt"
-	"strings"
+	"github.com/totherme/nosj/matchers"
 
+	"fmt"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/types"
 	"github.com/totherme/nosj"
-	"github.com/totherme/nosj/matchers"
+	"strings"
 )
 
-var _ = Describe("HaveJSONKeyMatcher", func() {
+var _ = Describe("HavePointerMatcher", func() {
 	var json nosj.JSON
 	BeforeEach(func() {
 		rawjson := `{"name": "fred",
@@ -35,43 +35,50 @@ var _ = Describe("HaveJSONKeyMatcher", func() {
 	})
 	Describe("Match", func() {
 		Context("When we give it a JSON object", func() {
-			DescribeTable("the matcher matches iff HasKey returns true", func(key string) {
+			DescribeTable("the matcher matches iff HasPointer returns true", func(p string) {
 
-				var matcher types.GomegaMatcher = matchers.HaveJSONKey(key)
-				Expect(matcher.Match(json)).To(Equal(json.HasKey(key)))
+				var matcher types.GomegaMatcher = matchers.HaveJSONPointer(p)
+				hasp, err := json.HasPointer(p)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(matcher.Match(json)).To(Equal(hasp))
 			},
-				Entry("a string key", "name"),
-				Entry("a number key", "life"),
-				Entry("a list key", "othernames"),
-				Entry("a boolean key", "beauty"),
-				Entry("an object key", "things"),
-				Entry("a null key", "not"),
-				Entry("an absent key", "badgers"),
+				Entry("a string pointer", "/name"),
+				Entry("a number pointer", "/life"),
+				Entry("a list pointer", "/othernames"),
+				Entry("a boolean pointer", "/beauty"),
+				Entry("an object pointer", "/things"),
+				Entry("a pointer to null", "/not"),
+				Entry("an absent pointer", "/badgers"),
+				Entry("a long pointer", "/things/more"),
 			)
 		})
+
 		Context("when we give it a non-json object", func() {
 			It("returns a helpful error message", func() {
-				matcher := matchers.HaveJSONKey("key")
+				matcher := matchers.HaveJSONPointer("/perfectly/valid")
 				_, err := matcher.Match(`{"you":"might almost think this would work"}`)
 				Expect(err).To(MatchError(ContainSubstring("not a JSON object. Have you done nosj.ParseJSON(...)?")))
 			})
 		})
-	})
-
-	Describe("FailureMessage", func() {
-		It("should tell us what key we expected to find", func() {
-			Expect(matchers.HaveJSONKey("my-key").FailureMessage("actual-object")).
-				To(ContainSubstring("expected 'actual-object' to be a nosj.JSON object with key 'my-key'"))
-			Expect(matchers.HaveJSONKey("my-key").FailureMessage(42)).
-				To(ContainSubstring("expected '42' to be a nosj.JSON object with key 'my-key'"))
+		Context("when we give it an invalid pointer", func() {
+			It("returns a helpful error message", func() {
+				matcher := matchers.HaveJSONPointer("not/a/valid/pointer")
+				_, err := matcher.Match(json)
+				Expect(err).To(MatchError(ContainSubstring("JSON pointer must be empty or start with a \"/\"")))
+			})
 		})
-
+	})
+	Describe("FailureMessage", func() {
+		It("should tell us what pointer we expected to find", func() {
+			Expect(matchers.HaveJSONPointer("/my/pointer").FailureMessage("actual-object")).
+				To(ContainSubstring("expected 'actual-object' to be a nosj.JSON object with pointer '/my/pointer'"))
+		})
 		Context("when the input has a long string representation", func() {
 			It("truncates that representation", func() {
-				Expect(len(matchers.HaveJSONKey("absent-key").FailureMessage(json))).To(BeNumerically("<", 115))
-				Expect(matchers.HaveJSONKey("absent-key").FailureMessage(json)).
+				Expect(len(matchers.HaveJSONPointer("/pointer").FailureMessage(json))).To(BeNumerically("<", 115))
+				Expect(matchers.HaveJSONPointer("/pointer").FailureMessage(json)).
 					To(ContainSubstring("..."))
-				Expect(matchers.HaveJSONKey("absent-key").FailureMessage(json)).
+				Expect(matchers.HaveJSONPointer("/pointer").FailureMessage(json)).
 					To(ContainSubstring("{nosj:map"))
 			})
 		})
@@ -79,7 +86,7 @@ var _ = Describe("HaveJSONKeyMatcher", func() {
 		Context("when the input's string representation is exactly as large as we're willing to print", func() {
 			It("prints it all, without elipses", func() {
 				stringOfLength50 := strings.Repeat("a", 50)
-				failureMessage := matchers.HaveJSONKey("absent-key").FailureMessage(stringOfLength50)
+				failureMessage := matchers.HaveJSONPointer("/pointer").FailureMessage(stringOfLength50)
 				Expect(failureMessage).To(ContainSubstring(fmt.Sprintf("'%s'", stringOfLength50)))
 				Expect(failureMessage).NotTo(ContainSubstring("..."))
 			})
@@ -100,24 +107,24 @@ var _ = Describe("HaveJSONKeyMatcher", func() {
 			Expect(err).NotTo(HaveOccurred())
 		})
 
-		It("should tell us what key we expected not to find", func() {
-			Expect(matchers.HaveJSONKey("key").NegatedFailureMessage(shortJson)).
-				To(ContainSubstring("expected '{nosj:map[key:val]}' not to contain the key 'key'"))
+		It("should tell us what pointer we expected not to find", func() {
+			Expect(matchers.HaveJSONPointer("/key").NegatedFailureMessage(shortJson)).
+				To(ContainSubstring("expected '{nosj:map[key:val]}' not to contain the pointer '/key'"))
 		})
 
 		Context("when the input has a long string representation", func() {
 			It("truncates that representation", func() {
-				Expect(len(matchers.HaveJSONKey("beauty").NegatedFailureMessage(json))).To(BeNumerically("<", 100))
-				Expect(matchers.HaveJSONKey("beauty").NegatedFailureMessage(json)).
+				Expect(len(matchers.HaveJSONPointer("/beauty").NegatedFailureMessage(json))).To(BeNumerically("<", 102))
+				Expect(matchers.HaveJSONPointer("/beauty").NegatedFailureMessage(json)).
 					To(ContainSubstring("..."))
-				Expect(matchers.HaveJSONKey("beauty").NegatedFailureMessage(json)).
+				Expect(matchers.HaveJSONPointer("/beauty").NegatedFailureMessage(json)).
 					To(ContainSubstring("{nosj:map"))
 			})
 		})
 
 		Context("when the input is exactly as large as we're willing to print", func() {
 			It("prints it all, without elipses", func() {
-				failureMessage := matchers.HaveJSONKey("key").NegatedFailureMessage(jsonOfLength50)
+				failureMessage := matchers.HaveJSONPointer("/key").NegatedFailureMessage(jsonOfLength50)
 				Expect(failureMessage).To(ContainSubstring(fmt.Sprintf("'%+v'", jsonOfLength50)))
 				Expect(failureMessage).NotTo(ContainSubstring("..."))
 			})

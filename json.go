@@ -39,13 +39,13 @@ func (j JSON) HasKey(key string) bool {
 	return ok
 }
 
-func (j JSON) HasPointer(p string) bool {
+func (j JSON) HasPointer(p string) (bool, error) {
 	pointer, err := gojsonpointer.NewJsonPointer(p)
 	if err != nil {
-		return false
+		return false, err
 	}
 	_, _, err = pointer.Get(j.nosj)
-	return err == nil
+	return err == nil, nil
 }
 
 func (j JSON) GetField(key string) JSON {
