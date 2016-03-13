@@ -76,9 +76,9 @@ morejson := myjson.F("path").F("to").F("property")
 
 Note that all these methods will return another nosj.JSON object to the
 variable `morejson`.  To do anything interesting, you'll probably want to get a
-golang value out of the nosj.JSON object, as documented in 'Getting Golang Values'
-below. Finally, notice that while `GetByPointer`'s return type includes an
-error (e.g. when the pointer does not exist in this nosj.JSON), the return type of
+golang value out of the nosj.JSON object, as documented in 'Getting Golang
+Values' below. Finally, notice that while `GetByPointer`'s return type includes
+an error (e.g. when the pointer does not exist in `myjson`), the return type of
 `GetField` does not. This allows `GetField` to be chained (and thus makes up
 for single-field names being significantly less expressive than JSON pointers),
 but does mean that `GetField` will panic in those occasions where
@@ -132,6 +132,7 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	. "github.com/totherme/nosj/gnosj"
 )
 
 var _ = Describe("Gnosj matchers", func() {
