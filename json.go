@@ -4,8 +4,9 @@ package nosj
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/xeipuuv/gojsonpointer"
 	"reflect"
+
+	"github.com/xeipuuv/gojsonpointer"
 )
 
 const (
@@ -88,6 +89,11 @@ func (j JSON) GetByPointer(p string) (nosj JSON, err error) {
 	json, _, err := pointer.Get(j.nosj)
 	nosj = JSON{nosj: json}
 	return
+}
+
+// RawValue returns the raw go value of the parsed json, without any type checking
+func (j JSON) RawValue() interface{} {
+	return j.nosj
 }
 
 // IsString returns true iff the json represented by this JSON struct is a string.

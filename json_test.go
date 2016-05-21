@@ -134,6 +134,26 @@ var _ = Describe("JSON", func() {
 			})
 		})
 
+		It("has a raw value equal to the parsed JSON", func() {
+			Expect(json.RawValue()).To(HaveLen(6))
+			Expect(json.RawValue()).To(HaveKey("name"))
+			Expect(json.RawValue().(map[string]interface{})["name"]).To(Equal("fred"))
+			Expect(json.RawValue()).To(HaveKey("othernames"))
+			Expect(json.RawValue().(map[string]interface{})["othernames"]).To(HaveLen(3))
+			Expect(json.RawValue().(map[string]interface{})["othernames"]).To(ContainElement("alice"))
+			Expect(json.RawValue().(map[string]interface{})["othernames"]).To(ContainElement("bob"))
+			Expect(json.RawValue().(map[string]interface{})["othernames"]).To(ContainElement("ezekiel"))
+			Expect(json.RawValue()).To(HaveKey("life"))
+			Expect(json.RawValue().(map[string]interface{})["life"]).To(Equal(42.0))
+			Expect(json.RawValue()).To(HaveKey("things"))
+			Expect(json.RawValue().(map[string]interface{})["things"]).To(Equal(map[string]interface{}{
+				"more": "things",
+			}))
+			Expect(json.RawValue()).To(HaveKey("beauty"))
+			Expect(json.RawValue().(map[string]interface{})["beauty"]).To(Equal(true))
+			Expect(json.RawValue()).To(HaveKey("not"))
+			Expect(json.RawValue().(map[string]interface{})["not"]).To(BeNil())
+		})
 	})
 
 	Context("when my json represents a string", func() {
@@ -157,8 +177,8 @@ var _ = Describe("JSON", func() {
 		})
 
 		It("can get that string", func() {
-			Expect(err).NotTo(HaveOccurred())
 			Expect(json.StringValue()).To(Equal("this is a string"))
+			Expect(json.RawValue()).To(Equal("this is a string"))
 		})
 
 		Context("when I try to do non-string things", func() {
@@ -196,6 +216,7 @@ var _ = Describe("JSON", func() {
 
 		It("can get that number", func() {
 			Expect(json.NumValue()).To(BeNumerically("==", 3.141))
+			Expect(json.RawValue()).To(BeNumerically("==", 3.141))
 		})
 
 		Context("when I try to do non-number things", func() {
@@ -233,6 +254,7 @@ var _ = Describe("JSON", func() {
 
 		It("can get that bool", func() {
 			Expect(json.BoolValue()).To(BeTrue(), "actually should be the value 'true'")
+			Expect(json.RawValue()).To(BeTrue(), "actually should be the value 'true'")
 		})
 
 		Context("when I try to do non-bool things", func() {
@@ -275,6 +297,14 @@ var _ = Describe("JSON", func() {
 			Expect(json.ListValue()[1].IsNum()).To(BeTrue())
 		})
 
+		It("can get that list in raw form", func() {
+			Expect(json.RawValue()).To(HaveLen(3))
+			Expect(reflect.TypeOf(json.RawValue())).To(Equal(reflect.TypeOf([]interface{}{})))
+			Expect(reflect.TypeOf(json.RawValue().([]interface{})[0])).To(Equal(reflect.TypeOf(true)))
+			Expect(json.RawValue().([]interface{})[0]).To(BeTrue())
+			Expect(json.RawValue().([]interface{})[1]).To(Equal(32.0))
+		})
+
 		Context("when I try to do non-list things", func() {
 			It("panics", func() {
 				Expect(func() { json.HasKey("wat?") }).To(Panic())
@@ -296,8 +326,11 @@ var _ = Describe("JSON", func() {
 		})
 
 		It("tells me my json represents null", func() {
-			Expect(err).NotTo(HaveOccurred())
 			Expect(json.IsNull()).To(BeTrue(), "this is null")
+		})
+
+		It("has raw value nil", func() {
+			Expect(json.RawValue()).To(BeNil())
 		})
 
 		It("tells me it doesn't represent anything else", func() {
