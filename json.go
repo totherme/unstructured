@@ -39,6 +39,12 @@ func (j JSON) IsOb() bool {
 	return reflect.TypeOf(j.nosj) == reflect.TypeOf(map[string]interface{}{})
 }
 
+// ObValue returns a golang map[string]interface{} represenation of the json object represented by this JSON struct. If the JSON
+// struct does not represent a json object, this method panics. If in doubt, check with `IsOb()`
+func (j JSON) ObValue() map[string]interface{} {
+	return j.nosj.(map[string]interface{})
+}
+
 // HasKey returns true iff the json object represented by this JSON struct contains `key`
 //
 // Note: this will panic if the json represented by this JSON struct is not a json object. If in doubt, check with `IsOb()`

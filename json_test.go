@@ -45,6 +45,17 @@ var _ = Describe("JSON", func() {
 			Expect(simpleObJson.IsOb()).To(BeTrue(), "this json represents an object")
 		})
 
+		It("can get that object", func() {
+			obVal := json.ObValue()
+			Expect(obVal).To(HaveLen(6))
+			Expect(obVal).To(HaveKey("name"))
+			Expect(obVal).To(HaveKey("othernames"))
+			Expect(obVal).To(HaveKey("life"))
+			Expect(obVal).To(HaveKey("things"))
+			Expect(obVal).To(HaveKey("beauty"))
+			Expect(obVal).To(HaveKey("not"))
+		})
+
 		It("tells me it doesn't represent anything else", func() {
 			Expect(json.IsString()).To(BeFalse(), "not a string")
 			Expect(json.IsNum()).To(BeFalse(), "not a number")
