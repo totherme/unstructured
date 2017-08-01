@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/ghodss/yaml"
 	"github.com/xeipuuv/gojsonpointer"
 )
 
@@ -23,7 +24,17 @@ type JSON struct {
 	nosj interface{}
 }
 
-// ParseJSON unmarshals json from an input string. Use this for generating a JSON struct, whose contents you can examine
+// ParseYAML unmarshals json from an input string. Use this for generating a YAML struct, whose contents you can examine
+// using the following functions.
+func ParseYAML(rawjson string) (JSON, error) {
+	jsonbytes, err := yaml.YAMLToJSON([]byte(rawjson))
+	if err != nil {
+		return JSON{}, err
+	}
+	return ParseJSON(string(jsonbytes))
+}
+
+// ParseJSON unmarshals yaml from an input string. Use this for generating a JSON struct, whose contents you can examine
 // using the following functions.
 func ParseJSON(rawjson string) (JSON, error) {
 	j := JSON{}
@@ -82,6 +93,13 @@ func (j JSON) GetField(key string) JSON {
 // F is a shorthand for `GetField`
 func (j JSON) F(key string) JSON {
 	return j.GetField(key)
+}
+
+// SetField updates the field `fieldName` of this JSON object. If this is not a JSON object, we might crash.
+// If the field `fieldName` does not exist on this object, create it.
+func (j JSON) SetField(fieldName string, val interface{}) {
+	jmap := j.nosj.(map[string]interface{})
+	jmap[fieldName] = val
 }
 
 // GetByPointer returns a JSON struct containing the contents of the original json at the given pointer address `p`.

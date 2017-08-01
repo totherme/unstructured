@@ -27,6 +27,28 @@ var _ = Describe("JSON", func() {
 							"not": null
 						}`
 	})
+
+	It("looks the same, whether it's JSON or YAML", func() {
+		rawyaml := `
+name: "fred"
+othernames:
+- "alice"
+- "bob"
+- "ezekiel"
+life: 42
+things:
+  more: "things"
+beauty: true
+not: null
+`
+		json, err := nosj.ParseJSON(rawjson)
+		Expect(err).NotTo(HaveOccurred())
+		yaml, err := nosj.ParseYAML(rawyaml)
+		Expect(err).NotTo(HaveOccurred())
+		Expect(json).To(BeEquivalentTo(yaml))
+
+	})
+
 	Context("when my JSON represents an object", func() {
 		var err error
 		var json nosj.JSON
@@ -54,6 +76,16 @@ var _ = Describe("JSON", func() {
 			Expect(obVal).To(HaveKey("things"))
 			Expect(obVal).To(HaveKey("beauty"))
 			Expect(obVal).To(HaveKey("not"))
+		})
+
+		It("can update fields on that object", func() {
+			json.SetField("name", "david")
+			Expect(json.F("name").StringValue()).To(Equal("david"))
+		})
+
+		It("can add fields to that object", func() {
+			json.SetField("newfield", "new value")
+			Expect(json.F("newfield").StringValue()).To(Equal("new value"))
 		})
 
 		It("tells me it doesn't represent anything else", func() {
