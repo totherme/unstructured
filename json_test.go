@@ -159,6 +159,7 @@ not: null
 				Expect(func() { json.NumValue() }).To(Panic())
 				Expect(func() { json.BoolValue() }).To(Panic())
 				Expect(func() { json.ListValue() }).To(Panic())
+				Expect(json.SetElem(0, "some-value")).To(MatchError(ContainSubstring("not a list")))
 			})
 		})
 
@@ -346,6 +347,12 @@ not: null
 			Expect(reflect.TypeOf(json.RawValue().([]interface{})[0])).To(Equal(reflect.TypeOf(true)))
 			Expect(json.RawValue().([]interface{})[0]).To(BeTrue())
 			Expect(json.RawValue().([]interface{})[1]).To(Equal(32.0))
+		})
+
+		It("can set items in that list", func() {
+			err := json.SetElem(1, "badgers")
+			Expect(err).NotTo(HaveOccurred())
+			Expect(json.ListValue()[1].StringValue()).To(Equal("badgers"))
 		})
 
 		Context("when I try to do non-list things", func() {

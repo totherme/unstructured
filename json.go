@@ -171,6 +171,16 @@ func (j JSON) ListValue() (list []JSON) {
 	return
 }
 
+// SetElem sets the element at a given index in this JSON list to the given value.
+// If this JSON object does not represent a list, return an error
+func (j JSON) SetElem(index int, value interface{}) error {
+	if !j.IsList() {
+		return fmt.Errorf("This is not a list, so you can't set an element of it")
+	}
+	j.nosj.([]interface{})[index] = value
+	return nil
+}
+
 // IsNull returns true iff the json represented by this JSON struct is json null.
 func (j JSON) IsNull() bool {
 	return j.nosj == nil
