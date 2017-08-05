@@ -90,7 +90,7 @@ example to see the fully-checked version.
 
 We also provide a number of [gomega](https://onsi.github.io/gomega) matchers in
 case you want to inspect semi-structured data in your tests. You can see these
-used [here](examples/usage_test.go)
+used [here](examples/usage_test.go).
 
 ## Gotchas
 
