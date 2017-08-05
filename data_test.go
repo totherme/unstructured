@@ -79,12 +79,12 @@ not: null
 		})
 
 		It("can update fields on that object", func() {
-			json.SetField("name", "david")
+			Expect(json.SetField("name", "david")).To(Succeed())
 			Expect(json.F("name").StringValue()).To(Equal("david"))
 		})
 
 		It("can add fields to that object", func() {
-			json.SetField("newfield", "new value")
+			Expect(json.SetField("newfield", "new value")).To(Succeed())
 			Expect(json.F("newfield").StringValue()).To(Equal("new value"))
 		})
 
@@ -154,7 +154,7 @@ not: null
 		})
 
 		Context("when I try to do non-objectey things with it", func() {
-			It("panics", func() {
+			It("panics or errors", func() {
 				Expect(func() { json.StringValue() }).To(Panic())
 				Expect(func() { json.NumValue() }).To(Panic())
 				Expect(func() { json.BoolValue() }).To(Panic())
@@ -200,7 +200,7 @@ not: null
 		})
 	})
 
-	Context("when my json represents a string", func() {
+	Context("when my data represents a string", func() {
 		var json unstructured.Data
 		var err error
 		BeforeEach(func() {
@@ -226,12 +226,13 @@ not: null
 		})
 
 		Context("when I try to do non-string things", func() {
-			It("panics", func() {
+			It("panics or errors", func() {
 				Expect(func() { json.HasKey("wat?") }).To(Panic())
 				Expect(func() { json.GetField("oh noe!") }).To(Panic())
 				Expect(func() { json.NumValue() }).To(Panic())
 				Expect(func() { json.BoolValue() }).To(Panic())
 				Expect(func() { json.ListValue() }).To(Panic())
+				Expect(json.SetField("some-field", "some-value")).To(MatchError(ContainSubstring("not an object")))
 			})
 		})
 	})

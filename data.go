@@ -117,11 +117,15 @@ func (j Data) F(key string) Data {
 // SetField updates the field `fieldName` of this Data object.
 // If the field `fieldName` does not exist on this object, create it.
 //
-// Note: this function panics if this Data does not represent an object. If in
-// doubt, check with `IsOb()`
-func (j Data) SetField(fieldName string, val interface{}) {
+// If this Data does not represent an object, return an error.
+func (j Data) SetField(fieldName string, val interface{}) error {
+	if !j.IsOb() {
+		return fmt.Errorf("This is not an object, so you can't set a field on it.")
+	}
 	jmap := j.data.(map[string]interface{})
 	jmap[fieldName] = val
+
+	return nil
 }
 
 // RawValue returns the raw go value of the parsed data, without any type
