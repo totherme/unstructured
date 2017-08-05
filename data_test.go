@@ -175,6 +175,8 @@ not: null
 				Expect(err).To(MatchError(ContainSubstring("not a bool")))
 				_, err = json.ListValue()
 				Expect(err).To(MatchError(ContainSubstring("not a list")))
+				_, ok := json.FindElem(func(_ unstructured.Data) bool { return false })
+				Expect(ok).To(BeFalse())
 			})
 		})
 
@@ -398,6 +400,23 @@ not: null
 			err := json.SetElem(1, "badgers")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(json.UnsafeListValue()[1].UnsafeStringValue()).To(Equal("badgers"))
+		})
+
+		It("can find elements of that list", func() {
+			elem, ok := json.FindElem(func(d unstructured.Data) bool {
+				return d.IsNum() && d.UnsafeNumValue() == 32
+			})
+			Expect(ok).To(BeTrue())
+			Expect(elem.UnsafeNumValue()).To(BeEquivalentTo(32))
+		})
+
+		Context("when we can't find a given element", func() {
+			It("uses the 'comma ok' to tell us so", func() {
+				_, ok := json.FindElem(func(d unstructured.Data) bool {
+					return false
+				})
+				Expect(ok).To(BeFalse())
+			})
 		})
 
 		Context("when I try to do non-list things", func() {

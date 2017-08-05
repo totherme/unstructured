@@ -240,6 +240,23 @@ func (j Data) ListValue() ([]Data, error) {
 	return j.UnsafeListValue(), nil
 }
 
+// An ElementMatcher can be used with FindElem to find an element in an
+// unstructured list.
+type ElementMatcher func(Data) bool
+
+// FindElem finds an element in a list, using a provided matcher
+func (j Data) FindElem(match ElementMatcher) (Data, bool) {
+	if !j.IsList() {
+		return Data{}, false
+	}
+	for _, elem := range j.UnsafeListValue() {
+		if match(elem) {
+			return elem, true
+		}
+	}
+	return Data{}, false
+}
+
 // SetElem sets the element at a given index in this Data list to the given value.
 // If this Data object does not represent a list, return an error
 func (j Data) SetElem(index int, value interface{}) error {
