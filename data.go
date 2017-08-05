@@ -114,9 +114,11 @@ func (j Data) F(key string) Data {
 	return j.GetField(key)
 }
 
-// SetField updates the field `fieldName` of this Data object. If this is not a
-// Data object, we might crash.
+// SetField updates the field `fieldName` of this Data object.
 // If the field `fieldName` does not exist on this object, create it.
+//
+// Note: this function panics if this Data does not represent an object. If in
+// doubt, check with `IsOb()`
 func (j Data) SetField(fieldName string, val interface{}) {
 	jmap := j.data.(map[string]interface{})
 	jmap[fieldName] = val

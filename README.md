@@ -1,170 +1,117 @@
-# NOSJ - Tiny Simple JSON Reflection in Go
+# Unstructured - for when you can't fit your data into a struct
 
-This is to make testing JSON output of whatever-you're-doing a tiny bit easier.
+[![GoDoc](https://godoc.org/github.com/totherme/unstructured?status.svg)](https://godoc.org/github.com/totherme/unstructured)
 
-[![GoDoc](https://godoc.org/github.com/totherme/nosj?status.svg)](https://godoc.org/github.com/totherme/nosj)
+## Why?
 
-## Quick start
-
-For full details of the below examples, see [this file](example_usage_test.go).
-
-First: import [nosj](http://github.com/totherme/nosj),
-[ginkgo](http://github.com/onsi/ginkgo) and
-[gomega](http://github.com/onsi/gomega):
+Go is awesome at [de-]serialising structured data. We can do things like:
 
 ```go
-import (
-	"github.com/totherme/nosj"
+type MyType struct {
+  Key1 string `yaml:"key1"`
+  Key2 int    `yaml:"key2"`
+}
 
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
-)
+...
+
+myYaml = `
+key1: "Alice"
+key2: "Bob"
+`
+
+var myVar MyType
+err := yaml.Unmarshal([]byte(myYaml), &myVar)
 ```
 
-Next, get yourself some nosj.JSON:
+This is fantastic so long as:
+1. You know the exact structure of your data at compile time.
+1. That structure can be mapped to a go struct type.
+
+For an example of point (2) failing, consider the following yaml:
+
+```yaml
+top-level-list:
+- "this first element is a string - perhaps containing metadata"
+- name: first real element
+  type: element-type-1
+  payload: [1,2,3,4]
+- name: second real element
+  type: element-type-2
+  payload: 
+    some: embedded structure
+```
+
+I do not know of a way to define a struct type in go which will accept this
+YAML when I attempt to deserialize it.  If we're designing our systems
+end-to-end in go, we will almost certainly avoid producing YAML structures like
+this. However, sometimes we may have to interface with other systems written
+perhaps in more dynamically typed languages, where this sort of thing is more
+natural.
+
+For an example of point (1) failing, consider the schema of a [bosh
+manifest](https://bosh.io/docs/manifest-v2.html). The type of the properties
+block of an instance group is described as a "hash". In practice, these hashes
+can be quite complex structures, depending on how configurable the jobs in that
+particular instance group are. Unfortunately, the schema for each individual
+properties block is defined by the authors of the jobs in the instance group.
+If we are writing a tool in go that manages bosh manifests in general, then we
+have no way to be more specific than the type `map[string]interface{}`.
+
+## What?
+
+When working with data which cannot be described at compile time in the golang
+type language, we have no choice but to either leave go and work in some other
+language, or to work without the safety net of our type system. This library
+attempts to make managing unstructured data in an untyped way less unpleasant
+than it might otherwise be.
+
+## How?
+
+This library leans on the excellent
+[gojsonpointer](https://github.com/xeipuuv/gojsonpointer) library to allow us
+to address deep into JSON and YAML structures and:
+- retrieve data -- if it exists
+- write data -- if the parent we're writing into exists
+
+This allows us to handle the data above with [code something
+like](examples/usage.go):
 
 ```go
-rawjson := `{...}`
-
-myjson, err = nosj.ParseJSON(rawjson)
-Expect(err).NotTo(HaveOccurred())
+	myData, err := unstructured.ParseYAML(myYaml)
+	myPayloadData, err := myData.GetByPointer("/top-level-list/2/payload/some")
+	fmt.Println(myPayloadData.StringValue())
+	myPayloadMap, err := myData.GetByPointer("/top-level-list/2/payload")
+	myPayloadMap.SetField("additional-key", []string{"some", "arbitrary", "data"})
 ```
 
-Test!
+However, do see the "Gotchas" section below. The unchecked `err` assignments in
+that code block aren't the only dangerous bits. Click through to the full
+example to see the fully-checked version.
 
-```go
-It("contains three employees", func() {
-	employees, err := myjson.GetByPointer("/employees")
-	Expect(err).NotTo(HaveOccurred())
-	Expect(employees).To(BeAList())
-	Expect(employees.ListValue()).To(HaveLen(3))
-})
+We also provide a number of [gomega](https://onsi.github.io/gomega) matchers in
+case you want to inspect semi-structured data in your tests. You can see these
+used [here](examples/usage_test.go)
 
-Describe("the first employee", func() {
-	It("is great at cooking", func() {
-		skill, err := myjson.GetByPointer("/employees/0/profile/special-skill")
-		Expect(err).NotTo(HaveOccurred())
-		Expect(skill).To(BeAString())
-		Expect(skill.StringValue()).To(Equal("szechuan cookery"))
-	})
-})
-```
+## Gotchas
 
-In addition to nosj's JSON-wrangling, these tests make use of the
-[ginkgo](http://github.com/onsi/ginkgo) BDD DSL, which provides constructs like
-`Describe` and `It`; and the [gomega](http://github.com/onsi/gomega) matcher
-library, which gives us `Expect`.
+Since we're deliberately working around go's type system, there's quite a high
+risk that our program might panic if we're not careful. All known panics are
+documented in the API documentation for each method, but here are the main
+points:
 
-## Getting nosj.JSON Values
-
-There are two approaches you can take to pulling values out of a nosj.JSON
-object. Firstly, if you like [JSON
-pointers](https://tools.ietf.org/html/rfc6901), you can use them:
-
-```go
-morejson, err := myjson.GetByPointer("/path/to/property")
-```
-
-The other approach is to get by one key at a time. For this, you can use
-`GetField` or its alias `F`:
-
-```go
-morejson := myjson.GetField("path").GetField("to").GetField("property")
-// or equivalently:
-morejson := myjson.F("path").F("to").F("property")
-```
-
-Note that all these methods will return another nosj.JSON object to the
-variable `morejson`.  To do anything interesting, you'll probably want to get a
-golang value out of the nosj.JSON object, as documented in 'Getting Golang
-Values' below. Finally, notice that while `GetByPointer`'s return type includes
-an error (e.g. when the pointer does not exist in `myjson`), the return type of
-`GetField` does not. This allows `GetField` to be chained (and thus makes up
-for single-field names being significantly less expressive than JSON pointers),
-but does mean that `GetField` will panic in those occasions where
-`GetByPointer` would return a helpful error message.
-
-
-## Testing nosj.JSON Values
-
-nosj.JSON values may represent data of a variety of golang types. To discover these
-types, you can use methods such as:
-
-```go
-isJSONBool := myjson.IsBool()
-isJSONNum := myjson.IsNum()
-isJSONString := myjson.IsString()
-isJSONOb := myjson.IsOb()
-isJSONList := myjson.IsList()
-isJSONNull := myjson.IsNull()
-```
-
-If your nosj.JSON object represents a JSON object (as opposed to, for example,
-a JSON String), you may also want to check if that object has a field of a
-particular name:
-
-```go
-hasField := myjson.HasKey("particular-name")
-```
-
-## Getting Golang Values
-
-If you are sure what JSON type is represented by your nosj.JSON object, you can
-get a value of the appropriate golang type like so:
-
-```go
-myGolangBool := myjson.BoolValue()
-myGolangNum := myjson.NumValue()
-myGolangString := myjson.StringValue()
-myGolangOb := myjson.ObValue()
-myGolangList := myjson.ListValue()
-```
-
-## Matchers
-
-If you're using [ginkgo](http://github.com/onsi/ginkgo) and
-[gomega](http://github.com/onsi/gomega), you might prefer to use a
-[matcher](gnosj) rather than test your JSON directly:
-
-```go
-import (
-	"github.com/totherme/nosj"
-
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
-	. "github.com/totherme/nosj/gnosj"
-)
-
-var _ = Describe("Gnosj matchers", func() {
-  It("does the same thing as our test methods", func() {
-    // Type matchers
-    Expect(myjson.IsBool()).To(BeTrue())
-    Expect(myjson).To(BeABool())
-
-    Expect(myjson.IsNum()).To(BeTrue())
-    Expect(myjson).To(BeANum())
-
-    Expect(myjson.IsString()).To(BeTrue())
-    Expect(myjson).To(BeAString())
-
-    Expect(myjson.IsOb()).To(BeTrue())
-    Expect(myjson).To(BeAnObject())
-
-    Expect(myjson.IsList()).To(BeTrue())
-    Expect(myjson).To(BeAList())
-
-    Expect(myjson.IsNull()).To(BeTrue())
-    Expect(myjson).To(BeANull())
-
-    // Access matchers
-    Expect(myjson.HasKey("my-key")).To(BeTrue())
-    Expect(myjson).To(HaveJSONKey("my-key"))
-
-    Expect(myjson.HasPointer("/my/pointer")).To(BeTrue())
-    Expect(myjson).To(HaveJSONPointer("/my/pointer"))
-  })
-})
-```
-
-Each pair of expectations in the above block is composed of two equivalent
-statements.
+- If you try to get a real data value of the wrong type from some
+  unstructured.Data, then you'll get a panic. For example `d.StringValue()`
+  will panic if the data in `d` is actually a list. You can always check the
+  type with methods like `d.IsString()`.
+- If you use the unsafe field accessor methods to get a field that doesn't
+  exist, then you'll get a panic. For example
+  `d.F("parent-field").F("sub-field")` will panic unless `d` is a map with key
+  `"parent-field"` which contains a map with key `"sub-field"`. You can check
+  these things with methods like `IsOb` and `HasKey`, but you should probably
+  just use `GetByPointer` instead. The unsafe accessors are only really useful
+  for writing terse chained statements in tests, when you're almost entirely
+  certain that the path exists, and a panic would be a correctly failing test
+  anyway.
+- If you try to set a field of an unstructured.Data which does not represent a
+  map. For example, `d.SetField("field-name", "value")` will panic if `d`
+  actually represents a string. Use `IsOb` to check first.
