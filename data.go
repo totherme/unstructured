@@ -51,11 +51,21 @@ func (j Data) IsOb() bool {
 	return reflect.TypeOf(j.data) == reflect.TypeOf(map[string]interface{}{})
 }
 
-// ObValue returns a golang map[string]interface{} represenation of the object
+// UnsafeObValue returns a golang map[string]interface{} represenation of the object
 // represented by this Data struct. If the Data struct does not represent an
 // object, this method panics. If in doubt, check with `IsOb()`
-func (j Data) ObValue() map[string]interface{} {
+func (j Data) UnsafeObValue() map[string]interface{} {
 	return j.data.(map[string]interface{})
+}
+
+// ObValue returns a golang map[string]interface{} represenation of the object
+// represented by this Data struct. If the Data struct does not represent an
+// object, this method returns an error
+func (j Data) ObValue() (map[string]interface{}, error) {
+	if !j.IsOb() {
+		return nil, fmt.Errorf("This is not an object, so we can't get the object value of it")
+	}
+	return j.UnsafeObValue(), nil
 }
 
 // HasKey returns true iff the object represented by this Data struct contains `key`
@@ -95,12 +105,12 @@ func (j Data) GetByPointer(p string) (data Data, err error) {
 	return
 }
 
-// GetField returns a Data struct containing the contents of the original data
+// UnsafeGetField returns a Data struct containing the contents of the original data
 // at the given `key`. If this method name feels too long, use `F(key)`.
 //
 // Note: this function panics if the given `key` does not exist. If in doubt,
 // check with `HasKey()`.
-func (j Data) GetField(key string) Data {
+func (j Data) UnsafeGetField(key string) Data {
 	jmap := j.data.(map[string]interface{})
 	val, ok := jmap[key]
 	if !ok {
@@ -109,9 +119,9 @@ func (j Data) GetField(key string) Data {
 	return Data{data: val}
 }
 
-// F is a shorthand for `GetField`
+// F is a shorthand for `UnsafeGetField`
 func (j Data) F(key string) Data {
-	return j.GetField(key)
+	return j.UnsafeGetField(key)
 }
 
 // SetField updates the field `fieldName` of this Data object.
@@ -140,11 +150,21 @@ func (j Data) IsString() bool {
 	return reflect.TypeOf(j.data) == reflect.TypeOf("")
 }
 
-// StringValue returns the golang string representation of the string
+// UnsafeStringValue returns the golang string representation of the string
 // represented by this Data struct. If the Data struct does not represent a
 // string, this method panics. If in doubt, check with `IsString()`
-func (j Data) StringValue() string {
+func (j Data) UnsafeStringValue() string {
 	return j.data.(string)
+}
+
+// StringValue returns the golang string representation of the string
+// represented by this Data struct. If the Data struct does not represent a
+// string, this method returns an error.
+func (j Data) StringValue() (string, error) {
+	if !j.IsString() {
+		return "", fmt.Errorf("This is not a string, so we can't get the StringValue of it")
+	}
+	return j.UnsafeStringValue(), nil
 }
 
 // IsNum returns true iff the data represented by this Data struct is a number.
@@ -152,11 +172,21 @@ func (j Data) IsNum() bool {
 	return reflect.TypeOf(j.data) == reflect.TypeOf(64.4)
 }
 
-// NumValue returns the golang float64 representation of the number represented
+// UnsafeNumValue returns the golang float64 representation of the number represented
 // by this Data struct. If the Data struct does not represent a number, this
 // method panics. If in doubt, check with `IsNum()`
-func (j Data) NumValue() float64 {
+func (j Data) UnsafeNumValue() float64 {
 	return j.data.(float64)
+}
+
+// NumValue returns the golang float64 representation of the number represented
+// by this Data struct. If the Data struct does not represent a number, this
+// method returns an error.
+func (j Data) NumValue() (float64, error) {
+	if !j.IsNum() {
+		return 0, fmt.Errorf("This is not a number, so we can't get the NumValue of it")
+	}
+	return j.UnsafeNumValue(), nil
 }
 
 // IsBool returns true iff the data represented by this Data struct is a boolean.
@@ -164,11 +194,21 @@ func (j Data) IsBool() bool {
 	return reflect.TypeOf(j.data) == reflect.TypeOf(true)
 }
 
-// BoolValue returns the golang bool representation of the bool represented by
+// UnsafeBoolValue returns the golang bool representation of the bool represented by
 // this Data struct. If the Data struct does not represent a bool, this method
 // panics. If in doubt, check with `IsBool()`
-func (j Data) BoolValue() bool {
+func (j Data) UnsafeBoolValue() bool {
 	return j.data.(bool)
+}
+
+// BoolValue returns the golang bool representation of the bool represented by
+// this Data struct. If the Data struct does not represent a bool, this method
+// returns an error.
+func (j Data) BoolValue() (bool, error) {
+	if !j.IsBool() {
+		return false, fmt.Errorf("This is not a bool, so we can't get the bool value of it")
+	}
+	return j.UnsafeBoolValue(), nil
 }
 
 // IsList returns true iff the data represented by this Data struct is a list.
@@ -179,15 +219,25 @@ func (j Data) IsList() bool {
 	return reflect.TypeOf(j.data).Kind() == reflect.TypeOf([]interface{}{}).Kind()
 }
 
-// ListValue returns a golang slice of Data structs representing the
+// UnsafeListValue returns a golang slice of Data structs representing the
 // unstructured list represented by this Data struct.  If the Data struct does
 // not represent a list, this method panics. If in doubt, check with `IsList()`
-func (j Data) ListValue() (list []Data) {
+func (j Data) UnsafeListValue() (list []Data) {
 	list = []Data{}
 	for _, val := range j.data.([]interface{}) {
 		list = append(list, Data{data: val})
 	}
 	return
+}
+
+// ListValue returns a golang slice of Data structs representing the
+// unstructured list represented by this Data struct.  If the Data struct does
+// not represent a list, this method returns an error.
+func (j Data) ListValue() ([]Data, error) {
+	if !j.IsList() {
+		return nil, fmt.Errorf("This is not a list, so we can't get its ListValue")
+	}
+	return j.UnsafeListValue(), nil
 }
 
 // SetElem sets the element at a given index in this Data list to the given value.

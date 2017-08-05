@@ -31,21 +31,21 @@ top-level-list:
 		panic("Couldn't address into my own yaml")
 	}
 
-	if !myPayloadData.IsString() {
-		panic("I really thought that was a string...")
+	myPayloadValue, err := myPayloadData.StringValue()
+	if err != nil {
+		panic("I really expected myPayloadData to represent a string...")
 	}
-	fmt.Println(myPayloadData.StringValue())
+	fmt.Println(myPayloadValue)
 
 	myPayloadMap, err := myData.GetByPointer("/top-level-list/2/payload")
 	if err != nil {
 		panic("Couldn't address into my own yaml")
 	}
 
-	if !myPayloadMap.IsOb() {
-		panic("I can't write into this object if it's not an object")
+	err = myPayloadMap.SetField("additional-key", []string{"some", "arbitrary", "data"})
+	if err != nil {
+		panic("I relly expected myPayloadMap to be an Object that I could write fields into")
 	}
-
-	myPayloadMap.SetField("additional-key", []string{"some", "arbitrary", "data"})
 
 	outputYaml, err := yaml.Marshal(myData.RawValue())
 	if err != nil {

@@ -59,8 +59,8 @@ have no way to be more specific than the type `map[string]interface{}`.
 
 ## What?
 
-When working with data which cannot be described at compile time in the golang
-type language, we have no choice but to either leave go and work in some other
+When working with data which cannot be described at compile time in the go type
+language, we have no choice but to either leave go and work in some other
 language, or to work without the safety net of our type system. This library
 attempts to make managing unstructured data in an untyped way less unpleasant
 than it might otherwise be.
@@ -73,20 +73,18 @@ to address deep into JSON and YAML structures and:
 - retrieve data -- if it exists
 - write data -- if the parent we're writing into exists
 
-This allows us to handle the data above with [code something
-like](examples/usage.go):
+This allows us to handle the data above with code something like this:
 
 ```go
 	myData, err := unstructured.ParseYAML(myYaml)
 	myPayloadData, err := myData.GetByPointer("/top-level-list/2/payload/some")
-	fmt.Println(myPayloadData.StringValue())
+	myPayloadString, err := myPayloadData.StringValue()
+	fmt.Println(myPayloadString)
 	myPayloadMap, err := myData.GetByPointer("/top-level-list/2/payload")
-	myPayloadMap.SetField("additional-key", []string{"some", "arbitrary", "data"})
+	err := myPayloadMap.SetField("additional-key", []string{"some", "arbitrary", "data"})
 ```
-
-However, do see the "Gotchas" section below. The unchecked `err` assignments in
-that code block aren't the only dangerous bits. Click through to the full
-example to see the fully-checked version.
+Of course, in the [real version](examples/usage.go), all the error values are
+checked.
 
 We also provide a number of [gomega](https://onsi.github.io/gomega) matchers in
 case you want to inspect semi-structured data in your tests. You can see these
@@ -94,24 +92,19 @@ used [here](examples/usage_test.go).
 
 ## Gotchas
 
-Since we're deliberately working around go's type system, there's quite a high
-risk that our program might panic if we're not careful. All known panics are
-documented in the API documentation for each method, but here are the main
-points:
+Since we're deliberately working around go's type system, we have to perform a
+lot of type-like checks ourselves, at runtime. For most of the methods in the
+library, this means we might return an error, which you should check. However,
+sometimes it's useful to be able to chain our methods, and this is only
+possible if those methods return singletons. To facilitate this, we have some
+"Unsafe" methods, which may panic if their preconditions are not met. For
+example, `d.F("parent-field").F("sub-field")` will panic unless `d` is a map
+with key `"parent-field"` which contains a map with key `"sub-field"`. You can
+check these things with methods like `IsOb` and `HasKey`, but you should
+probably just use `GetByPointer` instead. The unsafe accessors are only really
+useful for writing terse chained statements in tests, when you're almost
+entirely certain that the path exists, and a panic would be a correctly failing
+test anyway.
 
-- If you try to get a real data value of the wrong type from some
-  unstructured.Data, then you'll get a panic. For example `d.StringValue()`
-  will panic if the data in `d` is actually a list. You can always check the
-  type with methods like `d.IsString()`.
-- If you use the unsafe field accessor methods to get a field that doesn't
-  exist, then you'll get a panic. For example
-  `d.F("parent-field").F("sub-field")` will panic unless `d` is a map with key
-  `"parent-field"` which contains a map with key `"sub-field"`. You can check
-  these things with methods like `IsOb` and `HasKey`, but you should probably
-  just use `GetByPointer` instead. The unsafe accessors are only really useful
-  for writing terse chained statements in tests, when you're almost entirely
-  certain that the path exists, and a panic would be a correctly failing test
-  anyway.
-- If you try to set a field of an unstructured.Data which does not represent a
-  map. For example, `d.SetField("field-name", "value")` will panic if `d`
-  actually represents a string. Use `IsOb` to check first.
+You can see examples of the usage of these unsafe accessors in the "alternative
+formulations" of the tests in [this example](examples/usage_test.go).

@@ -60,7 +60,13 @@ var _ = Describe("Some things you can test with gunstructured", func() {
 			employees, err := json.GetByPointer("/employees")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(employees).To(BeAList())
-			Expect(employees.ListValue()).To(HaveLen(3))
+			employeeList, err := employees.ListValue()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(employeeList).To(HaveLen(3))
+		})
+
+		It("contains three employees - alternative formulation", func() {
+			Expect(json.F("employees").UnsafeListValue()).To(HaveLen(3))
 		})
 
 		Describe("the first employee", func() {
@@ -68,7 +74,13 @@ var _ = Describe("Some things you can test with gunstructured", func() {
 				skill, err := json.GetByPointer("/employees/0/profile/special-skill")
 				Expect(err).NotTo(HaveOccurred())
 				Expect(skill).To(BeAString())
-				Expect(skill.StringValue()).To(Equal("szechuan cookery"))
+				skillStr, err := skill.StringValue()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(skillStr).To(Equal("szechuan cookery"))
+			})
+
+			It("is great at cooking -- alternative formulation", func() {
+				Expect(json.F("employees").UnsafeListValue()[0].F("profile").F("special-skill").UnsafeStringValue()).To(Equal("szechuan cookery"))
 			})
 		})
 	})

@@ -68,7 +68,7 @@ not: null
 		})
 
 		It("can get that object", func() {
-			obVal := json.ObValue()
+			obVal := json.UnsafeObValue()
 			Expect(obVal).To(HaveLen(6))
 			Expect(obVal).To(HaveKey("name"))
 			Expect(obVal).To(HaveKey("othernames"))
@@ -78,14 +78,21 @@ not: null
 			Expect(obVal).To(HaveKey("not"))
 		})
 
+		It("can get that object safely", func() {
+			obVal := json.UnsafeObValue()
+			safeObVal, err := json.ObValue()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(safeObVal).To(Equal(obVal))
+		})
+
 		It("can update fields on that object", func() {
 			Expect(json.SetField("name", "david")).To(Succeed())
-			Expect(json.F("name").StringValue()).To(Equal("david"))
+			Expect(json.F("name").UnsafeStringValue()).To(Equal("david"))
 		})
 
 		It("can add fields to that object", func() {
 			Expect(json.SetField("newfield", "new value")).To(Succeed())
-			Expect(json.F("newfield").StringValue()).To(Equal("new value"))
+			Expect(json.F("newfield").UnsafeStringValue()).To(Equal("new value"))
 		})
 
 		It("tells me it doesn't represent anything else", func() {
@@ -119,24 +126,24 @@ not: null
 		})
 
 		It("can get an extant key", func() {
-			newJson := json.GetField("things")
+			newJson := json.UnsafeGetField("things")
 			Expect(newJson.IsOb()).To(BeTrue(), "the inner object is also an object")
 			Expect(newJson.HasKey("more")).To(BeTrue(), "the inner object has the 'more' field")
 		})
 
 		It("can chain extant keys", func() {
-			Expect(json.GetField("things").GetField("more").StringValue()).To(Equal("things"))
+			Expect(json.UnsafeGetField("things").UnsafeGetField("more").UnsafeStringValue()).To(Equal("things"))
 		})
 
 		It("can get by pointer", func() {
 			got, err := json.GetByPointer("/things/more")
 			Expect(err).NotTo(HaveOccurred())
-			Expect(got.StringValue()).To(Equal("things"))
+			Expect(got.UnsafeStringValue()).To(Equal("things"))
 		})
 
-		DescribeTable("F and GetByPointer both mirror GetField for single-level paths", func(key string) {
-			Expect(json.F(key)).To(Equal(json.GetField(key)))
-			Expect(json.GetByPointer("/" + key)).To(Equal(json.GetField(key)))
+		DescribeTable("F and GetByPointer both mirror UnsafeGetField for single-level paths", func(key string) {
+			Expect(json.F(key)).To(Equal(json.UnsafeGetField(key)))
+			Expect(json.GetByPointer("/" + key)).To(Equal(json.UnsafeGetField(key)))
 		},
 			Entry("existing object key", "things"),
 			Entry("existing string key", "name"),
@@ -148,18 +155,26 @@ not: null
 
 		Context("when I try to get a key that doesn't exist", func() {
 			It("panics", func() {
-				Expect(func() { json.GetField("oh noe!") }).To(Panic())
+				Expect(func() { json.UnsafeGetField("oh noe!") }).To(Panic())
 				Expect(func() { json.F("oh noe!") }).To(Panic())
 			})
 		})
 
 		Context("when I try to do non-objectey things with it", func() {
 			It("panics or errors", func() {
-				Expect(func() { json.StringValue() }).To(Panic())
-				Expect(func() { json.NumValue() }).To(Panic())
-				Expect(func() { json.BoolValue() }).To(Panic())
-				Expect(func() { json.ListValue() }).To(Panic())
+				Expect(func() { json.UnsafeStringValue() }).To(Panic())
+				Expect(func() { json.UnsafeNumValue() }).To(Panic())
+				Expect(func() { json.UnsafeBoolValue() }).To(Panic())
+				Expect(func() { json.UnsafeListValue() }).To(Panic())
 				Expect(json.SetElem(0, "some-value")).To(MatchError(ContainSubstring("not a list")))
+				_, err := json.StringValue()
+				Expect(err).To(MatchError(ContainSubstring("not a string")))
+				_, err = json.NumValue()
+				Expect(err).To(MatchError(ContainSubstring("not a number")))
+				_, err = json.BoolValue()
+				Expect(err).To(MatchError(ContainSubstring("not a bool")))
+				_, err = json.ListValue()
+				Expect(err).To(MatchError(ContainSubstring("not a list")))
 			})
 		})
 
@@ -221,18 +236,26 @@ not: null
 		})
 
 		It("can get that string", func() {
-			Expect(json.StringValue()).To(Equal("this is a string"))
+			Expect(json.UnsafeStringValue()).To(Equal("this is a string"))
 			Expect(json.RawValue()).To(Equal("this is a string"))
+		})
+
+		It("can get that string safely", func() {
+			strVal, err := json.StringValue()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(strVal).To(Equal("this is a string"))
 		})
 
 		Context("when I try to do non-string things", func() {
 			It("panics or errors", func() {
 				Expect(func() { json.HasKey("wat?") }).To(Panic())
-				Expect(func() { json.GetField("oh noe!") }).To(Panic())
-				Expect(func() { json.NumValue() }).To(Panic())
-				Expect(func() { json.BoolValue() }).To(Panic())
-				Expect(func() { json.ListValue() }).To(Panic())
+				Expect(func() { json.UnsafeGetField("oh noe!") }).To(Panic())
+				Expect(func() { json.UnsafeNumValue() }).To(Panic())
+				Expect(func() { json.UnsafeBoolValue() }).To(Panic())
+				Expect(func() { json.UnsafeListValue() }).To(Panic())
 				Expect(json.SetField("some-field", "some-value")).To(MatchError(ContainSubstring("not an object")))
+				_, err := json.ObValue()
+				Expect(err).To(MatchError(ContainSubstring("not an object")))
 			})
 		})
 	})
@@ -260,17 +283,23 @@ not: null
 		})
 
 		It("can get that number", func() {
-			Expect(json.NumValue()).To(BeNumerically("==", 3.141))
+			Expect(json.UnsafeNumValue()).To(BeNumerically("==", 3.141))
 			Expect(json.RawValue()).To(BeNumerically("==", 3.141))
+		})
+
+		It("can get that number safely", func() {
+			num, err := json.NumValue()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(num).To(BeNumerically("==", 3.141))
 		})
 
 		Context("when I try to do non-number things", func() {
 			It("panics", func() {
 				Expect(func() { json.HasKey("wat?") }).To(Panic())
-				Expect(func() { json.GetField("oh noe!") }).To(Panic())
-				Expect(func() { json.StringValue() }).To(Panic())
-				Expect(func() { json.BoolValue() }).To(Panic())
-				Expect(func() { json.ListValue() }).To(Panic())
+				Expect(func() { json.UnsafeGetField("oh noe!") }).To(Panic())
+				Expect(func() { json.UnsafeStringValue() }).To(Panic())
+				Expect(func() { json.UnsafeBoolValue() }).To(Panic())
+				Expect(func() { json.UnsafeListValue() }).To(Panic())
 			})
 		})
 	})
@@ -298,17 +327,23 @@ not: null
 		})
 
 		It("can get that bool", func() {
-			Expect(json.BoolValue()).To(BeTrue(), "actually should be the value 'true'")
+			Expect(json.UnsafeBoolValue()).To(BeTrue(), "actually should be the value 'true'")
 			Expect(json.RawValue()).To(BeTrue(), "actually should be the value 'true'")
+		})
+
+		It("can get that bool safely", func() {
+			boolVal, err := json.BoolValue()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(boolVal).To(BeTrue(), "actually should be the value 'true'")
 		})
 
 		Context("when I try to do non-bool things", func() {
 			It("panics", func() {
 				Expect(func() { json.HasKey("wat?") }).To(Panic())
-				Expect(func() { json.GetField("oh noe!") }).To(Panic())
-				Expect(func() { json.StringValue() }).To(Panic())
-				Expect(func() { json.NumValue() }).To(Panic())
-				Expect(func() { json.ListValue() }).To(Panic())
+				Expect(func() { json.UnsafeGetField("oh noe!") }).To(Panic())
+				Expect(func() { json.UnsafeStringValue() }).To(Panic())
+				Expect(func() { json.UnsafeNumValue() }).To(Panic())
+				Expect(func() { json.UnsafeListValue() }).To(Panic())
 			})
 		})
 	})
@@ -336,10 +371,19 @@ not: null
 		})
 
 		It("can get that list", func() {
-			Expect(json.ListValue()).To(HaveLen(3))
-			Expect(reflect.TypeOf(json.ListValue()[0])).To(Equal(reflect.TypeOf(json)))
-			Expect(json.ListValue()[0].IsBool()).To(BeTrue())
-			Expect(json.ListValue()[1].IsNum()).To(BeTrue())
+			Expect(json.UnsafeListValue()).To(HaveLen(3))
+			Expect(reflect.TypeOf(json.UnsafeListValue()[0])).To(Equal(reflect.TypeOf(json)))
+			Expect(json.UnsafeListValue()[0].IsBool()).To(BeTrue())
+			Expect(json.UnsafeListValue()[1].IsNum()).To(BeTrue())
+		})
+
+		It("can get that list safely", func() {
+			listVal, err := json.ListValue()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(listVal).To(HaveLen(3))
+			Expect(reflect.TypeOf(listVal[0])).To(Equal(reflect.TypeOf(json)))
+			Expect(listVal[0].IsBool()).To(BeTrue())
+			Expect(listVal[1].IsNum()).To(BeTrue())
 		})
 
 		It("can get that list in raw form", func() {
@@ -353,16 +397,16 @@ not: null
 		It("can set items in that list", func() {
 			err := json.SetElem(1, "badgers")
 			Expect(err).NotTo(HaveOccurred())
-			Expect(json.ListValue()[1].StringValue()).To(Equal("badgers"))
+			Expect(json.UnsafeListValue()[1].UnsafeStringValue()).To(Equal("badgers"))
 		})
 
 		Context("when I try to do non-list things", func() {
 			It("panics", func() {
 				Expect(func() { json.HasKey("wat?") }).To(Panic())
-				Expect(func() { json.GetField("oh noe!") }).To(Panic())
-				Expect(func() { json.StringValue() }).To(Panic())
-				Expect(func() { json.NumValue() }).To(Panic())
-				Expect(func() { json.BoolValue() }).To(Panic())
+				Expect(func() { json.UnsafeGetField("oh noe!") }).To(Panic())
+				Expect(func() { json.UnsafeStringValue() }).To(Panic())
+				Expect(func() { json.UnsafeNumValue() }).To(Panic())
+				Expect(func() { json.UnsafeBoolValue() }).To(Panic())
 			})
 		})
 	})
@@ -395,11 +439,11 @@ not: null
 		Context("when I try to do ...well... things", func() {
 			It("panics", func() {
 				Expect(func() { json.HasKey("wat?") }).To(Panic())
-				Expect(func() { json.GetField("oh noe!") }).To(Panic())
-				Expect(func() { json.StringValue() }).To(Panic())
-				Expect(func() { json.NumValue() }).To(Panic())
-				Expect(func() { json.BoolValue() }).To(Panic())
-				Expect(func() { json.ListValue() }).To(Panic())
+				Expect(func() { json.UnsafeGetField("oh noe!") }).To(Panic())
+				Expect(func() { json.UnsafeStringValue() }).To(Panic())
+				Expect(func() { json.UnsafeNumValue() }).To(Panic())
+				Expect(func() { json.UnsafeBoolValue() }).To(Panic())
+				Expect(func() { json.UnsafeListValue() }).To(Panic())
 			})
 		})
 	})
