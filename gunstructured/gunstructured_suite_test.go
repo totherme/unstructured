@@ -1,4 +1,4 @@
-package nosj_test
+package gunstructured_test
 
 import (
 	. "github.com/onsi/ginkgo"
@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-func TestNosj(t *testing.T) {
+func TestMatchers(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Nosj Suite")
+	RunSpecs(t, "Gunstructured Matchers Suite")
 }

@@ -1,13 +1,13 @@
-package nosj_test
+package unstructured_test
 
 import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/totherme/nosj"
-	. "github.com/totherme/nosj/gnosj"
+	"github.com/totherme/unstructured"
+	. "github.com/totherme/unstructured/gunstructured"
 )
 
-var _ = Describe("Some things you can test with nosj", func() {
+var _ = Describe("Some things you can test with gunstructured", func() {
 	Context("when I have some JSON", func() {
 		var rawjson string = `
 		{ "id": 1,
@@ -48,11 +48,11 @@ var _ = Describe("Some things you can test with nosj", func() {
 				}
 			]
 		}`
-		var json nosj.JSON
+		var json unstructured.Data
 
 		BeforeEach(func() {
 			var err error
-			json, err = nosj.ParseJSON(rawjson)
+			json, err = unstructured.ParseJSON(rawjson)
 			Expect(err).NotTo(HaveOccurred())
 		})
 

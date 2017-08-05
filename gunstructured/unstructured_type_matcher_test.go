@@ -1,8 +1,8 @@
-package matchers_test
+package gunstructured_test
 
 import (
-	"github.com/totherme/nosj"
-	"github.com/totherme/nosj/matchers"
+	"github.com/totherme/unstructured"
+	"github.com/totherme/unstructured/gunstructured"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
@@ -15,7 +15,7 @@ type testData struct {
 	Typ     string
 }
 
-var _ = Describe("The JSON type matchers", func() {
+var _ = Describe("The Data type matchers", func() {
 	var rawjson string
 	var matcherSet []testData
 
@@ -36,35 +36,35 @@ var _ = Describe("The JSON type matchers", func() {
 
 		matcherSet = []testData{
 			{
-				Matcher: matchers.BeAnObject(),
-				Typ:     nosj.JSONOb,
+				Matcher: gunstructured.BeAnObject(),
+				Typ:     unstructured.DataOb,
 			},
 			{
-				Matcher: matchers.BeAString(),
-				Typ:     nosj.JSONString,
+				Matcher: gunstructured.BeAString(),
+				Typ:     unstructured.DataString,
 			},
 			{
-				Matcher: matchers.BeAList(),
-				Typ:     nosj.JSONList,
+				Matcher: gunstructured.BeAList(),
+				Typ:     unstructured.DataList,
 			},
 			{
-				Matcher: matchers.BeANum(),
-				Typ:     nosj.JSONNum,
+				Matcher: gunstructured.BeANum(),
+				Typ:     unstructured.DataNum,
 			},
 			{
-				Matcher: matchers.BeABool(),
-				Typ:     nosj.JSONBool,
+				Matcher: gunstructured.BeABool(),
+				Typ:     unstructured.DataBool,
 			},
 			{
-				Matcher: matchers.BeANull(),
-				Typ:     nosj.JSONNull,
+				Matcher: gunstructured.BeANull(),
+				Typ:     unstructured.DataNull,
 			},
 		}
 	})
 
-	Context("when we're given a JSON struct", func() {
+	Context("when we're given a Data struct", func() {
 		DescribeTable("each matcher matches iff IsOfType returns true for its type", func(key string) {
-			testjson, err := nosj.ParseJSON(rawjson)
+			testjson, err := unstructured.ParseJSON(rawjson)
 			Expect(err).NotTo(HaveOccurred())
 
 			field := testjson.F(key)
@@ -86,22 +86,22 @@ var _ = Describe("The JSON type matchers", func() {
 		It("fails", func() {
 			for _, td := range matcherSet {
 				_, err := td.Matcher.Match(4)
-				Expect(err).To(MatchError(ContainSubstring("not a JSON")))
+				Expect(err).To(MatchError(ContainSubstring("not a Data")))
 			}
 		})
 	})
 
 	Describe("FailureMessage", func() {
-		Context("when we get a JSON struct", func() {
+		Context("when we get a Data struct", func() {
 			DescribeTable("it gives the /actual/ json type we're looking at", func(key string, typ string) {
-				testjson, err := nosj.ParseJSON(rawjson)
+				testjson, err := unstructured.ParseJSON(rawjson)
 				Expect(err).NotTo(HaveOccurred())
 
 				field := testjson.F(key)
 
 				for _, td := range matcherSet {
-					Expect(td.Matcher.FailureMessage(field)).To(ContainSubstring("expected a JSON %s", td.Typ))
-					Expect(td.Matcher.FailureMessage(field)).To(ContainSubstring("got a JSON %s", typ))
+					Expect(td.Matcher.FailureMessage(field)).To(ContainSubstring("expected a Data %s", td.Typ))
+					Expect(td.Matcher.FailureMessage(field)).To(ContainSubstring("got a Data %s", typ))
 				}
 			},
 				Entry("an object", "things", "object"),
@@ -123,11 +123,11 @@ var _ = Describe("The JSON type matchers", func() {
 	})
 
 	Describe("NegatedFailureMessage", func() {
-		It("tells us we got a JSON object", func() {
-			json, err := nosj.ParseJSON(`{}`)
+		It("tells us we got a Data object", func() {
+			json, err := unstructured.ParseJSON(`{}`)
 			Expect(err).NotTo(HaveOccurred())
 			for _, td := range matcherSet {
-				Expect(td.Matcher.NegatedFailureMessage(json)).To(ContainSubstring("got a JSON %s", td.Typ))
+				Expect(td.Matcher.NegatedFailureMessage(json)).To(ContainSubstring("got a Data %s", td.Typ))
 			}
 		})
 	})

@@ -1,4 +1,4 @@
-package matchers_test
+package unstructured_test
 
 import (
 	. "github.com/onsi/ginkgo"
@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-func TestMatchers(t *testing.T) {
+func TestUnstructured(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Matchers Suite")
+	RunSpecs(t, "Unstructured Suite")
 }

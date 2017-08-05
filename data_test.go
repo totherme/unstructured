@@ -1,16 +1,16 @@
-package nosj_test
+package unstructured_test
 
 import (
 	"reflect"
 
-	"github.com/totherme/nosj"
+	"github.com/totherme/unstructured"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("JSON", func() {
+var _ = Describe("Data", func() {
 	var rawjson string
 	BeforeEach(func() {
 		rawjson = `{"name": "fred",
@@ -41,19 +41,19 @@ things:
 beauty: true
 not: null
 `
-		json, err := nosj.ParseJSON(rawjson)
+		json, err := unstructured.ParseJSON(rawjson)
 		Expect(err).NotTo(HaveOccurred())
-		yaml, err := nosj.ParseYAML(rawyaml)
+		yaml, err := unstructured.ParseYAML(rawyaml)
 		Expect(err).NotTo(HaveOccurred())
 		Expect(json).To(BeEquivalentTo(yaml))
 
 	})
 
-	Context("when my JSON represents an object", func() {
+	Context("when my Data represents an object", func() {
 		var err error
-		var json nosj.JSON
+		var json unstructured.Data
 		BeforeEach(func() {
-			json, err = nosj.ParseJSON(rawjson)
+			json, err = unstructured.ParseJSON(rawjson)
 		})
 
 		It("parses the json successfully", func() {
@@ -62,7 +62,7 @@ not: null
 
 		It("tells me that my json represents an object", func() {
 			Expect(json.IsOb()).To(BeTrue(), "this json represents an object")
-			simpleObJson, err := nosj.ParseJSON(`{"string":1 , "otherstring":2}`)
+			simpleObJson, err := unstructured.ParseJSON(`{"string":1 , "otherstring":2}`)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(simpleObJson.IsOb()).To(BeTrue(), "this json represents an object")
 		})
@@ -201,10 +201,10 @@ not: null
 	})
 
 	Context("when my json represents a string", func() {
-		var json nosj.JSON
+		var json unstructured.Data
 		var err error
 		BeforeEach(func() {
-			json, err = nosj.ParseJSON(`"this is a string"`)
+			json, err = unstructured.ParseJSON(`"this is a string"`)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -237,11 +237,11 @@ not: null
 	})
 
 	Context("when my json represents a number", func() {
-		var json nosj.JSON
+		var json unstructured.Data
 		var err error
 
 		BeforeEach(func() {
-			json, err = nosj.ParseJSON(`3.141`)
+			json, err = unstructured.ParseJSON(`3.141`)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -275,11 +275,11 @@ not: null
 	})
 
 	Context("when my json represents a bool", func() {
-		var json nosj.JSON
+		var json unstructured.Data
 		var err error
 
 		BeforeEach(func() {
-			json, err = nosj.ParseJSON(`true`)
+			json, err = unstructured.ParseJSON(`true`)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -313,11 +313,11 @@ not: null
 	})
 
 	Context("when my json represents a list", func() {
-		var json nosj.JSON
+		var json unstructured.Data
 		var err error
 
 		BeforeEach(func() {
-			json, err = nosj.ParseJSON(`[true, 32, {"this":"that"}]`)
+			json, err = unstructured.ParseJSON(`[true, 32, {"this":"that"}]`)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -367,11 +367,11 @@ not: null
 	})
 
 	Context("when my json represents null", func() {
-		var json nosj.JSON
+		var json unstructured.Data
 		var err error
 
 		BeforeEach(func() {
-			json, err = nosj.ParseJSON(`null`)
+			json, err = unstructured.ParseJSON(`null`)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -405,26 +405,26 @@ not: null
 
 	Context("when I look at some invalid JSON", func() {
 		It("returns a helpful error", func() {
-			_, err := nosj.ParseJSON("this isn't even slightly json")
+			_, err := unstructured.ParseJSON("this isn't even slightly json")
 			Expect(err).To(MatchError(ContainSubstring("parse error")))
 		})
 	})
 
 	Describe("the IsOfType convenience method", func() {
-		var json nosj.JSON
+		var json unstructured.Data
 		BeforeEach(func() {
 			var err error
-			json, err = nosj.ParseJSON(rawjson)
+			json, err = unstructured.ParseJSON(rawjson)
 			Expect(err).NotTo(HaveOccurred())
 		})
 		DescribeTable("IsOfType does the same as the individual type methods", func(key string) {
 			field := json.F(key)
-			Expect(field.IsOfType(nosj.JSONOb)).To(Equal(field.IsOb()))
-			Expect(field.IsOfType(nosj.JSONString)).To(Equal(field.IsString()))
-			Expect(field.IsOfType(nosj.JSONList)).To(Equal(field.IsList()))
-			Expect(field.IsOfType(nosj.JSONNum)).To(Equal(field.IsNum()))
-			Expect(field.IsOfType(nosj.JSONBool)).To(Equal(field.IsBool()))
-			Expect(field.IsOfType(nosj.JSONNull)).To(Equal(field.IsNull()))
+			Expect(field.IsOfType(unstructured.DataOb)).To(Equal(field.IsOb()))
+			Expect(field.IsOfType(unstructured.DataString)).To(Equal(field.IsString()))
+			Expect(field.IsOfType(unstructured.DataList)).To(Equal(field.IsList()))
+			Expect(field.IsOfType(unstructured.DataNum)).To(Equal(field.IsNum()))
+			Expect(field.IsOfType(unstructured.DataBool)).To(Equal(field.IsBool()))
+			Expect(field.IsOfType(unstructured.DataNull)).To(Equal(field.IsNull()))
 		},
 			Entry("an object key", "things"),
 			Entry("an string key", "name"),
@@ -434,7 +434,7 @@ not: null
 			Entry("a null key", "not"),
 		)
 
-		Context("when we give a string that isn't a JSON type", func() {
+		Context("when we give a string that isn't a Data type", func() {
 			It("panics", func() {
 				Expect(func() { json.IsOfType("badgers") }).To(Panic())
 			})

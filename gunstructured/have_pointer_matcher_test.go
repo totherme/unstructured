@@ -1,19 +1,20 @@
-package gnosj_test
+package gunstructured_test
 
 import (
-	"github.com/totherme/nosj/gnosj"
+	"github.com/totherme/unstructured/gunstructured"
 
 	"fmt"
+	"strings"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/types"
-	"github.com/totherme/nosj"
-	"strings"
+	"github.com/totherme/unstructured"
 )
 
 var _ = Describe("HavePointerMatcher", func() {
-	var json nosj.JSON
+	var json unstructured.Data
 	BeforeEach(func() {
 		rawjson := `{"name": "fred",
 							"othernames": [
@@ -29,15 +30,15 @@ var _ = Describe("HavePointerMatcher", func() {
 							"not": null
 						}`
 		var err error
-		json, err = nosj.ParseJSON(rawjson)
+		json, err = unstructured.ParseJSON(rawjson)
 		Expect(err).NotTo(HaveOccurred())
 
 	})
 	Describe("Match", func() {
-		Context("When we give it a JSON object", func() {
+		Context("When we give it a Data object", func() {
 			DescribeTable("the matcher matches iff HasPointer returns true", func(p string) {
 
-				var matcher types.GomegaMatcher = gnosj.HaveJSONPointer(p)
+				var matcher types.GomegaMatcher = gunstructured.HaveJSONPointer(p)
 				hasp, err := json.HasPointer(p)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(matcher.Match(json)).To(Equal(hasp))
@@ -55,14 +56,14 @@ var _ = Describe("HavePointerMatcher", func() {
 
 		Context("when we give it a non-json object", func() {
 			It("returns a helpful error message", func() {
-				matcher := gnosj.HaveJSONPointer("/perfectly/valid")
+				matcher := gunstructured.HaveJSONPointer("/perfectly/valid")
 				_, err := matcher.Match(`{"you":"might almost think this would work"}`)
-				Expect(err).To(MatchError(ContainSubstring("not a JSON object. Have you done nosj.ParseJSON(...)?")))
+				Expect(err).To(MatchError(ContainSubstring("not a Data object. Have you done unstructured.Parse[JSON|YAML](...)?")))
 			})
 		})
 		Context("when we give it an invalid pointer", func() {
 			It("returns a helpful error message", func() {
-				matcher := gnosj.HaveJSONPointer("not/a/valid/pointer")
+				matcher := gunstructured.HaveJSONPointer("not/a/valid/pointer")
 				_, err := matcher.Match(json)
 				Expect(err).To(MatchError(ContainSubstring("JSON pointer must be empty or start with a \"/\"")))
 			})
@@ -70,23 +71,23 @@ var _ = Describe("HavePointerMatcher", func() {
 	})
 	Describe("FailureMessage", func() {
 		It("should tell us what pointer we expected to find", func() {
-			Expect(gnosj.HaveJSONPointer("/my/pointer").FailureMessage("actual-object")).
-				To(ContainSubstring("expected 'actual-object' to be a nosj.JSON object with pointer '/my/pointer'"))
+			Expect(gunstructured.HaveJSONPointer("/my/pointer").FailureMessage("actual-object")).
+				To(ContainSubstring("expected 'actual-object' to be a unstructured.Data object with pointer '/my/pointer'"))
 		})
 		Context("when the input has a long string representation", func() {
 			It("truncates that representation", func() {
-				Expect(len(gnosj.HaveJSONPointer("/pointer").FailureMessage(json))).To(BeNumerically("<", 115))
-				Expect(gnosj.HaveJSONPointer("/pointer").FailureMessage(json)).
+				Expect(len(gunstructured.HaveJSONPointer("/pointer").FailureMessage(json))).To(BeNumerically("<", 125))
+				Expect(gunstructured.HaveJSONPointer("/pointer").FailureMessage(json)).
 					To(ContainSubstring("..."))
-				Expect(gnosj.HaveJSONPointer("/pointer").FailureMessage(json)).
-					To(ContainSubstring("{nosj:map"))
+				Expect(gunstructured.HaveJSONPointer("/pointer").FailureMessage(json)).
+					To(ContainSubstring("{data:map"))
 			})
 		})
 
 		Context("when the input's string representation is exactly as large as we're willing to print", func() {
 			It("prints it all, without elipses", func() {
 				stringOfLength50 := strings.Repeat("a", 50)
-				failureMessage := gnosj.HaveJSONPointer("/pointer").FailureMessage(stringOfLength50)
+				failureMessage := gunstructured.HaveJSONPointer("/pointer").FailureMessage(stringOfLength50)
 				Expect(failureMessage).To(ContainSubstring(fmt.Sprintf("'%s'", stringOfLength50)))
 				Expect(failureMessage).NotTo(ContainSubstring("..."))
 			})
@@ -95,36 +96,36 @@ var _ = Describe("HavePointerMatcher", func() {
 
 	Describe("NegatedFailureMessage", func() {
 		var (
-			shortJson      nosj.JSON
-			jsonOfLength50 nosj.JSON
+			shortJson      unstructured.Data
+			jsonOfLength50 unstructured.Data
 		)
 
 		BeforeEach(func() {
 			var err error
-			shortJson, err = nosj.ParseJSON(`{"key":"val"}`)
+			shortJson, err = unstructured.ParseJSON(`{"key":"val"}`)
 			Expect(err).NotTo(HaveOccurred())
-			jsonOfLength50, err = nosj.ParseJSON(fmt.Sprintf(`{"key":"%s"}`, strings.Repeat("a", 34)))
+			jsonOfLength50, err = unstructured.ParseJSON(fmt.Sprintf(`{"key":"%s"}`, strings.Repeat("a", 34)))
 			Expect(err).NotTo(HaveOccurred())
 		})
 
 		It("should tell us what pointer we expected not to find", func() {
-			Expect(gnosj.HaveJSONPointer("/key").NegatedFailureMessage(shortJson)).
-				To(ContainSubstring("expected '{nosj:map[key:val]}' not to contain the pointer '/key'"))
+			Expect(gunstructured.HaveJSONPointer("/key").NegatedFailureMessage(shortJson)).
+				To(ContainSubstring("expected '{data:map[key:val]}' not to contain the pointer '/key'"))
 		})
 
 		Context("when the input has a long string representation", func() {
 			It("truncates that representation", func() {
-				Expect(len(gnosj.HaveJSONPointer("/beauty").NegatedFailureMessage(json))).To(BeNumerically("<", 102))
-				Expect(gnosj.HaveJSONPointer("/beauty").NegatedFailureMessage(json)).
+				Expect(len(gunstructured.HaveJSONPointer("/beauty").NegatedFailureMessage(json))).To(BeNumerically("<", 102))
+				Expect(gunstructured.HaveJSONPointer("/beauty").NegatedFailureMessage(json)).
 					To(ContainSubstring("..."))
-				Expect(gnosj.HaveJSONPointer("/beauty").NegatedFailureMessage(json)).
-					To(ContainSubstring("{nosj:map"))
+				Expect(gunstructured.HaveJSONPointer("/beauty").NegatedFailureMessage(json)).
+					To(ContainSubstring("{data:map"))
 			})
 		})
 
 		Context("when the input is exactly as large as we're willing to print", func() {
 			It("prints it all, without elipses", func() {
-				failureMessage := gnosj.HaveJSONPointer("/key").NegatedFailureMessage(jsonOfLength50)
+				failureMessage := gunstructured.HaveJSONPointer("/key").NegatedFailureMessage(jsonOfLength50)
 				Expect(failureMessage).To(ContainSubstring(fmt.Sprintf("'%+v'", jsonOfLength50)))
 				Expect(failureMessage).NotTo(ContainSubstring("..."))
 			})

@@ -1,9 +1,9 @@
-package gnosj
+package gunstructured
 
 import (
 	"fmt"
 
-	"github.com/totherme/nosj"
+	"github.com/totherme/unstructured"
 )
 
 // HaveJSONPointerMatcher is a gomega matcher which tests if a given value
@@ -27,8 +27,8 @@ func (m HaveJSONPointerMatcher) Match(actual interface{}) (bool, error) {
 
 	switch t := actual.(type) {
 	default:
-		return false, fmt.Errorf("not a JSON object. Have you done nosj.ParseJSON(...)?")
-	case nosj.JSON:
+		return false, fmt.Errorf("not a Data object. Have you done unstructured.Parse[JSON|YAML](...)?")
+	case unstructured.Data:
 		return t.HasPointer(m.p)
 	}
 }
@@ -38,7 +38,7 @@ func (m HaveJSONPointerMatcher) Match(actual interface{}) (bool, error) {
 // pointer.
 func (m HaveJSONPointerMatcher) FailureMessage(actual interface{}) (message string) {
 	actualString := fmt.Sprintf("%+v", actual)
-	return fmt.Sprintf("expected '%s' to be a nosj.JSON object with pointer '%s'",
+	return fmt.Sprintf("expected '%s' to be a unstructured.Data object with pointer '%s'",
 		truncateString(actualString),
 		m.p)
 }
