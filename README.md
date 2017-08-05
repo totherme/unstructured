@@ -16,7 +16,7 @@ type MyType struct {
 
 myYaml = `
 key1: "Alice"
-key2: "Bob"
+key2: 65537
 `
 
 var myVar MyType
