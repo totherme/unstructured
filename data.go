@@ -124,6 +124,21 @@ func (j Data) F(key string) Data {
 	return j.UnsafeGetField(key)
 }
 
+// Keys returns a list of the keys on this Data object.
+//
+// If this is not a Data object, return an error
+func (j Data) Keys() ([]string, error) {
+	if !j.IsOb() {
+		return nil, fmt.Errorf("This is not an object, so you can't get a list of its keys.")
+	}
+	jmap := j.data.(map[string]interface{})
+	var keys []string
+	for key := range jmap {
+		keys = append(keys, key)
+	}
+	return keys, nil
+}
+
 // SetField updates the field `fieldName` of this Data object.
 // If the field `fieldName` does not exist on this object, create it.
 //

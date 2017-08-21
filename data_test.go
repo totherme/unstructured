@@ -95,6 +95,18 @@ not: null
 			Expect(json.F("newfield").UnsafeStringValue()).To(Equal("new value"))
 		})
 
+		It("can get the list of fields on that object", func() {
+			fields, err := json.Keys()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(fields).To(ContainElement("name"))
+			Expect(fields).To(ContainElement("othernames"))
+			Expect(fields).To(ContainElement("life"))
+			Expect(fields).To(ContainElement("things"))
+			Expect(fields).To(ContainElement("beauty"))
+			Expect(fields).To(ContainElement("not"))
+			Expect(fields).To(HaveLen(6))
+		})
+
 		It("tells me it doesn't represent anything else", func() {
 			Expect(json.IsString()).To(BeFalse(), "not a string")
 			Expect(json.IsNum()).To(BeFalse(), "not a number")
@@ -257,6 +269,8 @@ not: null
 				Expect(func() { json.UnsafeListValue() }).To(Panic())
 				Expect(json.SetField("some-field", "some-value")).To(MatchError(ContainSubstring("not an object")))
 				_, err := json.ObValue()
+				Expect(err).To(MatchError(ContainSubstring("not an object")))
+				_, err = json.Keys()
 				Expect(err).To(MatchError(ContainSubstring("not an object")))
 			})
 		})
