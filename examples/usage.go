@@ -3,9 +3,8 @@ package main
 import (
 	"fmt"
 
-	yaml "gopkg.in/yaml.v2"
-
 	"github.com/totherme/unstructured"
+	"gopkg.in/yaml.v3"
 )
 
 func main() {
