@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/ghodss/yaml v1.0.0
-	github.com/onsi/ginkgo/v2 v2.13.1
+	github.com/onsi/ginkgo/v2 v2.13.2
 	github.com/onsi/gomega v1.30.0
 	github.com/xeipuuv/gojsonpointer v0.0.0-20190905194746-02993c407bfb
 	gopkg.in/yaml.v3 v3.0.1
