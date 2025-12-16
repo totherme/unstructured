@@ -8,7 +8,7 @@ jobs:
         go: [ '1.22', '1.23' ]
     name: Test Go ${{ matrix.go }}
     steps:
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v6
         with:
           go-version: ${{ matrix.go }}
       - uses: actions/checkout@v4
